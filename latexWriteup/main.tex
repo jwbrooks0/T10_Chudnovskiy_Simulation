@@ -45,20 +45,23 @@
 
 \section{Introduction} % Unnumbered section
 
-\ldots
+This writeup covers the derivation implementation of Chudnovskiy's 2003 tearing mode simulation on the T-10 tokamak with a biased limiter \cite{2003}.  Some of the details I needed to fully implement the simulation were missing, and a later T-10 paper by Ivanov \cite{2014} fills in some of the gaps.  
+
+The code solves for the perturbed magnetic poloidal flux $\Psi(r,t)$ in the T-10 tokamak in the presence of m/n=2/1 tearing mode and with a biased limiter.  The idea of the simulation is that current sourced by the biased limiter into the plasma couples with the tearing mode and can result it changes in the mode's amplitude and frequency\cite{2003}.    
 
 
 
 
 \section{Code setup} % Numbered section
 
-The code for the 2003 simulation is broken up into three domains: the region inside the resonant surface ($0<r<r_s-W/2$), the resonant surface ($r=r_s$) and the region outside ($r_s+W/2<r<b$) where $r_s$ is the location of the resonant surface, $W$ is the island width, and $b$ is the location of the vessel wall and magnetic sensor.  The inner and outer regions are a Boundary Value Problem (BVP), and resonant surface is a single grid point that is advanced in time.  The equations are coupled by having the time advance code at $r_s$ provide the boundary conditions to the BVPs along the $r_s$.  The time advance equation require the spacial derivatives of the perturbed poloidal flux, $\Psi$, at the boundary.  
+The domain for this problem is broken up into three sections: the region inside the resonant surface ($0<r<r_s-W/2$), the resonant surface ($r_s-W/2<r<r_s+W/2$ and the region outside ($r_s+W/2<r<b$) where $r_s$ is the location of the resonant surface, $W$ is the island width, and $b$ is the location of the vessel wall and magnetic sensor.  
 
+The inner and outer regions are a Boundary Value Problem (BVP) with a current source term at $a$, the location of the limiter.  The middle region is a time evolution problem of the tearing mode solved at $r_s$, and $\Psi$ within this region is assumed to be constant.  The middle region couples to the outer regions by providing Dirichlet boundary conditions to the BVPs.  In return, the BVPs dictate the tearing mode stability parameter which is needed to calculate the time evolution of the tearing mode.   
 
 \subsection{Boundary Value Problem (BVP)}
 
 
-The original source starts with the BVP equations
+The BVP equations take the form,
 
 
 \begin{equation} \label{eq:BVPEquations}
@@ -68,11 +71,9 @@ The original source starts with the BVP equations
 \end{split}
 \end{equation}
 
-\noindent which is solved for two regions: the region inside the resonant surface ($0<r<r_s-W/2$) and the region outside ($r_s+W/2<r<b$) where $r_s$ is the location of the resonant surface, $W$ is the island width, and $b$ is the location of the vessel wall and magnetic sensor.  
+\noindent where the $C$ and $S$ subscripts represent the cosine and sine components of $\Psi$.  These equations need to be solved for both the sine and cosine terms and in the inner and outer regions, resulting in 4 BVP equations.  Of note, $W$ is a function of time and grows and contracts as the island expands and contracts.  This results in the sizes of the three domains periodically expanding and contracting, making the solver more complicated.   
 
-Of note, $W$ is a function of time and grows and contracts as the island moves around the torus.  One issue is that I don't know how to adjust my domain to compensate for this.  
-
-Next, Eq.~\ref{eq:BVPEquations} needs to be discretized, and there are four versions of this equation (inner cosine, inner sine, outer cosine, and outer sine).  Fortunately, the discretized form is nearly identical:
+To solve Eq.~\ref{eq:BVPEquations}, it first needs to be discretized.  Of note, there , and there are four versions of this equation (inner cosine, inner sine, outer cosine, and outer sine).  Fortunately, the discretized form is nearly identical:
 
 
 \begin{equation} \label{eq:BVPSolved}
@@ -115,24 +116,39 @@ A &=
 \end{split}
 \end{equation}
 
-\noindent The $\beta$ term is different for each of the four equations.  In addition, the boundary conditions for $\Psi$ have been added to the first and last element of each $\beta$ array. Note that $\beta_{C \ outside}(r_a)=\mu_0r \cdot \iota(t)$.
+Above, the continuous form of $\beta$ is
 
+\begin{equation} \label{eq:beta}
+\begin{split}
+\beta(r,t) &= \left\{
+\begin{array}{l l}
+\mu_0r \cdot \iota(t) \delta (r-a) & \text{ for } \Psi_C \\
+0 & \text{ for } \Psi_S\\
+\end{array} \right. \\\
+\end{split}
+\end{equation} 
+and it needs to be solved for all four $\Psi$ terms.  In addition, the first and last terms in $\beta$ contain the BC values discussed above.  Therefore, it's discretized form is
 \begin{equation} \label{eq:BVPAMatrix}
 \begin{split}
-\beta_{C,S \ inside}(t) &= 
+\beta_{C \ inside}(t) &= 
 \begin{bmatrix}
-0& \ldots &  0 & \Psi_{C,S}(t,r_s)
+0,& \ldots &  0, & \Psi_{C}(t,r_s)
+\end{bmatrix}^T, \\
+\beta_{S \ inside}(t) &= 
+\begin{bmatrix}
+0,& \ldots &  0, & \Psi_{S}(t,r_s)
 \end{bmatrix}^T, \\
 \beta_{C \ outside}(t) &= 
 \begin{bmatrix}
-\Psi_{C}(t,r_s) & 0 & \ldots &0 &\mu_0r_s \cdot \iota(t)  &0&\ldots &  0 
+\Psi_{C}(t,r_s), & 0, & \ldots &0, &\mu_0r_s \cdot \iota(t)/\Delta r,  &0,&\ldots &  0 
 \end{bmatrix}^T, \\
 \beta_{S \ outside}(t) &= 
 \begin{bmatrix}
-\Psi_{S}(t,r_s) & 0 & \ldots &  0 \\
+\Psi_{S}(t,r_s), & 0, & \ldots &  0 \\
 \end{bmatrix}^T, \\
 \end{split}
 \end{equation}
+where the discretized delta function is $1/ \Delta r$ is defined only at the $r=r_s$ grid.  Here, $\Delta r$ is the width of each radial grid point.
 
 
 The other terms in the above equations are
@@ -140,11 +156,6 @@ The other terms in the above equations are
 \begin{equation} \label{eq:BVPTerms}
 \begin{split}
 \alpha(r)&=\left( \frac{m^2}{r} +\frac{\mu_0 R}{B_T} \frac{\partial j / \partial r}{\mu(r)-n/m} \right) \\
-    \beta(r,t) &= \left\{
-    \begin{array}{l l}
-    \mu_0r \cdot \iota(t) \delta (r-a) & \text{ for } \Psi_C \\
-    0 & \text{ for } \Psi_S\\
-    \end{array} \right. \\
 \mu(r)&=1/q(r)\\
 \iota(t) &= \frac{J(t)m}{2a} \\
   \gamma_{+1}(r) &=\left(\frac{1}{2 \Delta r}+\frac{r}{\Delta r^2 }\right) \\
@@ -181,10 +192,10 @@ Discretizing and solving, it takes the form
 
 \begin{equation} \label{eq3}
 \begin{split}
-  \frac{\Psi_{C,r_s}^{n+1}-\Psi_{C,r_s}^{n}}{\Delta t} &=\left( k a^2 \omega_R \frac{\Delta'^{\ n}_{C}(W^n)}{W^n}\Psi_{C,r_s}^n-\Omega \Psi_{S,r_s}^n  \right ) \\
-  \Psi_{C,r_s}^{n+1} &=\Psi_{C,r_s}^{n}+\Delta t \left( k a^2 \omega_R \frac{\Delta'^{\ n}_C(W^{n})}{W^{n}}\Psi_{C,r_s}^{n}-\Omega \Psi_{S,r_s}^{n} \right )  \\ 
-   \Psi_{C,r_s}^{n+1} &=\Psi_{C,r_s}^{n}\left( 1 + \Delta t  k a^2 \omega_R \frac{\Delta'^{\ n}_C(W^{n})}{W^{n}}\right) - \Delta t \Omega \Psi_{S,r_s}^{n}   \\
-      \Psi_{C,r_s}^{n+1} &=\Psi_{C,r_s}^{n}\left( 1 + \Delta t  k a^2 \omega_R \frac{\Delta'^{\ n}_C(W^{n})}{W^{n}}\right) - \Delta t \Omega \Psi_{S,r_s}^{n}   \\
+\frac{\Psi_{C,r_s}^{n+1}-\Psi_{C,r_s}^{n}}{\Delta t} &=\left( k a^2 \omega_R \frac{\Delta'^{\ n}_{C}(W^n)}{W^n}\Psi_{C,r_s}^n-\Omega \Psi_{S,r_s}^n  \right ) \\
+\Psi_{C,r_s}^{n+1} &=\Psi_{C,r_s}^{n}+\Delta t \left( k a^2 \omega_R \frac{\Delta'^{\ n}_C(W^{n})}{W^{n}}\Psi_{C,r_s}^{n}-\Omega \Psi_{S,r_s}^{n} \right )  \\ 
+\Psi_{C,r_s}^{n+1} &=\Psi_{C,r_s}^{n}\left( 1 + \Delta t  k a^2 \omega_R \frac{\Delta'^{\ n}_C(W^{n})}{W^{n}}\right) - \Delta t \Omega \Psi_{S,r_s}^{n}   \\
+\Psi_{C,r_s}^{n+1} &=\Psi_{C,r_s}^{n}\left( 1 + \zeta \frac{\Delta'^{\ n}_C(W^{n})}{W^{n}}\right) - \eta \Psi_{S,r_s}^{n}   \\
 \end{split} 
 \end{equation} 
 
@@ -195,7 +206,9 @@ where
 \begin{equation} \label{eq3}
 \begin{split}
  & W(r_s) = 4 \sqrt{\frac{\sqrt{\Psi^2_{C,r_s} + \Psi^2_{S,r_s}}}{-r_sB_T\mu'(r_s)/R} }\\
-  & \Delta'_{C,S}=\frac{\Psi'_{C,S}(r_s+W/2)-\Psi'_{C,S}(r_s-W/2)}{\Psi_{C,S}}
+  & \Delta'_{C,S}(W)=\frac{\Psi'_{C,S}(r_s+W/2)-\Psi'_{C,S}(r_s-W/2)}{\Psi_{C,S}} \\
+  & \zeta = \Delta t k a^2 \omega_R \\
+  & \eta =  \Delta t \Omega \\
 \end{split} 
 \end{equation} 
 
@@ -210,17 +223,17 @@ The 2003 T-10 paper is a little vague in many regards but especially when it com
 \begin{split}
 m &= 2 \\
 n &= 1 \\
-R &= 1.5 \\
-B_T &= 2.5 \\
-I_p &= 250e3 \\
-\Omega & =1e3 \cdot 2 \pi \\
-\omega_r & = 1/0.01 \\
+R &= 1.5 \ \text{m}\\
+B_T &= 2.5 \ \text{T} \\
+I_p &= 250e3 \ \text{A}\\
+\Omega & =1e3 \ \text{Hz} \cdot 2 \pi \\
+\omega_r & = 1/0.01 \ \text{Hz} \\
 k &= \pi \\
-b = r_{wall} & = 0.39 \\
-a = r_{limiter} & = 0.27 \\
+b = r_{wall} & = 0.39 \ \text{m} \\
+a = r_{limiter} & = 0.27 \ \text{m} \\
 q(0) &= 0.7/0.85 \\
 q(a) = q(r_{limiter}) &= 2.4 \\
-B(b) = B(r_{wall}) & = 5e-4
+B(b) = B(r_{wall}) & = 5e-4 \ \text{T}
 \end{split} 
 \end{equation} 
 
@@ -236,7 +249,7 @@ j(r)=j(0) \left[ 1-(r/a)^2 \right]^l
 
 \begin{equation} \label{j}
 \begin{split}
-l=\left[ q(a)/q(0)\right]-1
+l=\left[ q(a)/q(0)\right]-1 = 1.914
 \end{split} 
 \end{equation} 
 
@@ -293,12 +306,12 @@ Instead, I'm presently using a quadratic q model, $q(r)=q(0)+cr^2$ until I figur
 \bibliographystyle{apsrev}% ,isbn=false %[isbn=false]
 \begin{thebibliography}{}
 
-\bibitem{Chudnovskiy2003}
+\bibitem{2003}
 A. Chudnovskiy, Y. Gvozdkov, N. Ivanov, et. al.,
 \emph{Nuclear Fusion}
 {\bf 43} (2003). 
 
-\bibitem{Ivanov2014}
+\bibitem{2014}
 N. V. Ivanov, A.M. Kakurin,
 \emph{Physics of Plasmas}
 {\bf 21}, 102502 (2014). 

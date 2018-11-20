@@ -135,12 +135,13 @@ def findNearest(array,value):
     
 def calcBeta(r,I0,r_limiter,r_limiter_index,midRange,psiC_s,psiS_s):
     mu0=4*np.pi*1e-7
+    dr=r[1]-r[0]
     
     betaC=np.zeros(len(r))
     betaS=np.zeros(len(r))
     
     # add current source term
-    iota=m*I0/2/r_limiter
+    iota=m*I0/2/r_limiter/dr
     betaC[r_limiter_index]=iota*mu0*r_limiter
 
     # impose boundary conditions
@@ -358,7 +359,7 @@ def plotInitialConditions():
     
 ## inputs
 nPoints=1000        # number of radial grid points
-tStop=3.0e-2          # duration of simulation [seconds]
+tStop=1.0e-2          # duration of simulation [seconds]
 dt=1e-5           # time step [seconds]
 
 I0=200#200            # sourced current [Amps]
@@ -397,7 +398,7 @@ t=np.arange(0,tStop+dt,dt)
 
 # create sourced current 
 I0=np.zeros(len(t))#np.sin(Omega*t+phi0)
-I0[np.where(t>t[-1]/4)]=1e6
+I0[np.where(t>t[-1]/2)]=5e2
 
 # current profile and derivative profile
 l=q_limiter/q_offset-1
@@ -465,7 +466,7 @@ for i in range(0,len(t)):#len(t)):
     (betaC,betaS)=calcBeta(r,I0[i],r_limiter,r_limiter_index,midRange,psiC_s,psiS_s)
     
     # create matrices
-    if domainChange[i]:
+    if True:#domainChange[i]:
         AInner=createA(r[inRange],gamma1[inRange],gamma0[inRange],gammaM1[inRange])
         AOuter=createA(r[outRange],gamma1[outRange],gamma0[outRange],gammaM1[outRange])
 
