@@ -82,7 +82,7 @@ To solve Eq.~\ref{eq:BVPEquations}, it first needs to be discretized.  Of note, 
  \frac{\Psi^{n+1}-\Psi^{n-1}}{2\Delta r}+r\left(\frac{\Psi^{n+1}-2\Psi^{n}+\Psi^{n-1}}{\Delta r^2}\right)-\alpha(r)\Psi^n & = - \beta(r,t)  \\
   \Psi^{n+1}\left(\frac{1}{2 \Delta r}+\frac{r}{\Delta r^2 }\right) + \Psi^n\left( \frac{-2r}{\Delta r^2} -\alpha(r) \right) + \Psi^{n-1}\left(-\frac{1}{2\Delta r} + \frac{r}{\Delta r^2} \right) & = - \beta(r,t) \\
   \Psi^{n+1} \ \gamma_{+1}(r) + \Psi^n \ \gamma_{0}(r) + \Psi^{n-1} \ \gamma_{-1}(r) & = - \beta(r,t) \\
-A \Psi & = -\beta(r,t) \\
+A(r) \Psi(r) & = -\beta(r,t) \\
 \end{split}
 \end{equation}
 
@@ -148,7 +148,7 @@ and it needs to be solved for all four $\Psi$ terms.  In addition, the first and
 \end{bmatrix}^T, \\
 \end{split}
 \end{equation}
-where the discretized delta function is $1/ \Delta r$ is defined only at the $r=r_s$ grid.  Here, $\Delta r$ is the width of each radial grid point.
+where the discretized delta function is $1/ \Delta r$ and is defined only at the $r=r_s$ grid.  Here, $\Delta r$ is the width of each radial grid.
 
 
 The other terms in the above equations are
@@ -257,9 +257,9 @@ Because $j(0)$ was not provided but $I_p$ was, the above model for $j(r)$ was us
 
 
 \begin{figure}[htb]
-	\includegraphics[width=15cm]{images/wessonCurrentProfile.png}
-	\caption{Current profile and derivative
-		\label{fig:schedule}}    
+	\includegraphics[width=15cm]{images/jAndQ.png}
+	\caption{Current and q profile
+		\label{fig:jAndQ}}    
 \end{figure}  
 
 \noindent Possibly $q(0)$ and $q(a)$ could be adjusted to get slightly different current profiles.  
@@ -269,31 +269,19 @@ The q-profile is a little more difficult.  The 2003 paper made no mention other 
 
 \begin{equation} \label{qCylindrical}
 \begin{split}
-q_{cyl}(r)=\frac{2(l+1)B_T}{\mu_0 j(0) R} \frac{(r/a)^2}{1-\left[ 1-(r/a)^2\right]^{l+1}}
+q_{cyl}(r\leq a)=\frac{2(l+1)B_T}{\mu_0 j(0) R} \frac{(r/a)^2}{1-\left[ 1-(r/a)^2\right]^{l+1}}.
 \end{split} 
 \end{equation} 
-
-\noindent However, this equation is not valid for $r>a$, and I need $q(r)$ defined all the way to $r=b$.  
-
-The paper also made mention to 
-
-\begin{equation} \label{qDef}
+However, this equation is not valid for $r>a$.  To solve for $q(r>a)$, I combined $\oint B_{\theta} dl = \mu_0 I_p$ and $q=\frac{rB_T}{RB_{\theta}}$ to get 
+\begin{equation} \label{qCylindrical}
 \begin{split}
-q(r)=\frac{2B_T}{\mu_0 \left<j(r)\right> R}
+q(r>a)=\frac{2\pi r^2B_T}{R\mu_0I_p}
 \end{split} 
 \end{equation} 
-
-\noindent where $\left<j(r)\right>$ is the average current density inside the radius $r$.  Because the system is in cylindrical coordinates, it's unclear if the average should be of $j(r)$ or $rj(r)$.  The average of $j(r)$ provides a q profile more similar to Eq.~\ref{qCylindrical}, but it places the resonant surface outside of the limiter.  
-
-Instead, I'm presently using a quadratic q model, $q(r)=q(0)+cr^2$ until I figure out a better method.  This provides the following and the derivative of 1/q.  
+Fig.~\ref{fig:jAndQ}b shows $q(r)$ and the radial derivative of $1/q(r)$.  
 
 
 
-\begin{figure}[htb]
-	\includegraphics[width=15cm]{images/quadraticQProfile.png}
-	\caption{Quadratic q profile and the derivative of 1/q.
-		\label{fig:schedule}}    
-\end{figure}  
 
 
 %----------------------------------------------------------------------------------------

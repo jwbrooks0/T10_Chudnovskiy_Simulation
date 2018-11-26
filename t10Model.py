@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt; plt.close('all')
 import scipy.sparse as sparse
 import time as time
+#from matplotlib.animation import FuncAnimation as _FuncAnimation
 
 #import hbtepLib as hbt; reload(hbt)
 #import johnsUnderDevelopementToolbox as john; reload(john); 
@@ -15,6 +16,11 @@ import time as time
 
 ########################################
 ### sub-functions
+
+#import numpy as _np
+
+
+ 
 
 def findDomainRanges(r,r_surf_index,W,oldMiddleRange):
     """
@@ -187,9 +193,6 @@ def createA(r,gamma1,gamma0,gammaM1):
     A[0,1]=0                            # enforces left BC
     A[-1,-1]=1                          # enforces right BC
     A[-1,-2]=0                          # enforces right BC
-#    A[1,0]=0
-#    A[-2,-1]=0 
-#    A_sparse=sparse.dia_matrix(A)
     
     return sparse.dia_matrix(A)
     
@@ -217,10 +220,6 @@ def firstOrderCenterDiff(x,y):
 def createTriDiag(diag1,diag2,diag3):
     # tri-diagonal matrix
     A=np.zeros((len(diag1),len(diag1)))
-#    print np.shape(A)
-#    print len(diag1)
-#    print len(diag2)
-#    print len(diag3)
     A[0,0]=diag2[0];
     A[0,1]=diag3[0];
     for i in range(1,len(diag1)-1):
@@ -234,13 +233,6 @@ def createTriDiag(diag1,diag2,diag3):
     
 ## current profiles
     
-#    
-#def peakedCurrentRutherfordModel(r,params=[1,0.8]):
-#    #https://aip.scitation.org/doi/pdf/10.1063/1.861939?class=pdf
-#    # page 804
-#    j0=params[0]
-#    r0=params[1]
-#    return j0*(1+(r/r0)**2)**(-2)
     
 def wessonCurrentModel(r,params):
     # 
@@ -254,12 +246,6 @@ def wessonCurrentModel(r,params):
     j[np.where(r>r0)]=0
     return j
     
-#def roundedCurrentRutherfordModel(r,params=[1,0.8]):
-#    #https://aip.scitation.org/doi/pdf/10.1063/1.861939?class=pdf
-#    # page 804
-#    j0=params[0]
-#    r0=params[1]  
-#    return j0*(1+(r/r0)**4)**(-1)
    
 
 ## q-profiles   
@@ -272,7 +258,17 @@ def quadraticQProfile(r,q0,r1,q1):
     return q
     
 def cylindricalQApproximation(r,r_limiter,l):
-    return 2*(l+1)*BT/(mu0*j[0]*R)*(r/r_limiter)**2/(1-(1-(r/r_limiter)**2)**(l+1))
+    """
+    Recommended in Ivanov's 2014 paper. However, it is only valid for r<=a.  
+    To correct for this, I solved \int B_{\theta} dl = \mu I_p and 
+    q=\frac{rB_z}{RB_{\theta}} to provide q all the way out to r=b.
+    """
+    q=  2*(l+1)*BT/(mu0*j[0]*R)*(r/r_limiter)**2/(1-(1-(r/r_limiter)**2)**(l+1))
+    q[0]=q[1]
+    i=np.where(q>0)[0]
+    for k in range(i[-1]+1,len(q)):
+        q[k]=2*np.pi*r[k]**2*BT/(R*mu0*iP)
+    return q
     
 def qProfileModel(r,j,BT,R):
     mu0=4*np.pi*1e-7
@@ -285,32 +281,13 @@ def qProfileModel(r,j,BT,R):
     
 ## plots
     
-def plotPsiOfR(rA,rB,PsiC_A,PsiS_A,PsiC_B,PsiS_B):
-    fig,ax=plt.subplots(1)
-    plt.title('psi(r)')
-    plt.plot(rA,PsiC_A,'r',label='PsiC')
-    plt.plot(rA,PsiS_A,'b--',label='PsiS')
-    plt.plot(rB,PsiC_B,'r')
-    plt.plot(rB,PsiS_B,'b--')
-    plt.legend()
-    addBoundariesToPlot(ax,r_surf,r_limiter,r_wall)
     
-def plotBeta(rA,rB,betaC_A,betaS_A,betaC_B,betaS_B):
-    fig,ax=plt.subplots(1)
-    plt.title('beta(r)')
-    plt.plot(rA,betaC_A,'r',label='betaC')
-    plt.plot(rA,betaS_A,'b--',label='betaS')
-    plt.plot(rB,betaC_B,'r')
-    plt.plot(rB,betaS_B,'b--')
-    plt.legend()
-    addBoundariesToPlot(ax,r_surf,r_limiter,r_wall)
-    
-def addBoundariesToPlot(ax,r_surf,r_limiter,r_wall):
-    ylim=ax.get_ylim()
-    ax.plot((r_surf,r_surf),ylim,'--',color='grey')
-    ax.plot((r_limiter,r_limiter),ylim,'--',color='grey')
-    ax.plot((r_wall,r_wall),ylim,'--',color='grey')
-    ax.set_ylim(ylim)
+#def addBoundariesToPlot(ax,r_surf,r_limiter,r_wall):
+#    ylim=ax.get_ylim()
+#    ax.plot((r_surf,r_surf),ylim,'--',color='grey')
+#    ax.plot((r_limiter,r_limiter),ylim,'--',color='grey')
+#    ax.plot((r_wall,r_wall),ylim,'--',color='grey')
+#    ax.set_ylim(ylim)
     
 def plotInitialConditions():
     
@@ -339,11 +316,11 @@ def plotInitialConditions():
     #f,ax = plt.subplots(1)
     ax=axx[1]
     ax2=ax.twinx()
-    p1=ax.plot(r,q,'k',label='q profile')
-    p2=ax2.plot(r,dmudr,'r',label='1/q profile derivative')
+    p1=ax.plot(r,q,'k',label='q(r)')
+    p2=ax2.plot(r,dmudr,'r',label=r'$\frac{\partial (1/q)}{\partial r}$')
     ax.set_xlabel('minor radius (m)')
     ax.set_ylabel(r'q')
-    ax2.set_ylabel(r'd(1/q)/dr',color='r')
+    ax2.set_ylabel(r'$\frac{\partial (1/q)}{\partial r}$',color='r')
     ylim=ax.get_ylim()
     p3=ax.plot((r_surf,r_surf),ylim,'--',label=r'r$_{surf}$')
     p4=ax.plot((r_limiter,r_limiter),ylim,'--',label=r'r$_{limiter}$')
@@ -353,20 +330,50 @@ def plotInitialConditions():
     lns = p1+p2+p3+p4+p5
     labs = [i.get_label() for i in lns]
     ax.legend(lns, labs)#, loc=0)
+    
+def plotFinalState():
+    f, axarr = plt.subplots(3, sharex=True)
+    axarr[0].plot(t,BC*1e4,'r.',label=r'B$_C(r_{wall})$')
+    axarr[0].plot(t,BS*1e4,'b.',label=r'B$_S(r_{wall})$')
+    axarr[0].set_ylabel('T')
+    axarr[0].legend()
+    axarr[1].plot(t,W,'.r',label='island width')
+    axarr[1].set_ylabel('m')
+    axarr[1].legend()
+    axarr[2].plot(t,I0,label='Sourced Current')
+    axarr[2].set_xlabel('Time (s)')
+    axarr[2].set_ylabel('A')
+    axarr[2].legend()
+
+def psiFrame(i):
+    fig,ax = plt.subplots()
+    ax2=ax.twinx()  
+    p1=ax.plot(r,PsiC[:,i],label='PsiC')
+    p2=ax.plot(r,PsiS[:,i],'--',label='PsiS')
+    p3=ax2.plot(r[inRange],betaC[inRange,i],'r',label=r'$\beta_C$')   
+    ax2.plot(r[outRange],betaC[outRange,i],'r')   
+    lns = p1+p2+p3
+    labs = [count.get_label() for count in lns]
+    ax.legend(lns, labs)
+    ax.set_ylim([-0.0002,0.0002])
+    ax2.set_ylabel(r'$\beta_C$',color='r')
+#    ylim=ax2.get_ylim()
+    ax2.set_ylim([-0.0002,0.0002])  
+        
         
 ########################################
 ### inputs/constants
     
 ## inputs
-nPoints=1000        # number of radial grid points
-tStop=1.0e-2          # duration of simulation [seconds]
+nPoints=1000 +1       # number of radial grid points
+tStop=2.0e-2          # duration of simulation [seconds]
 dt=1e-5           # time step [seconds]
 
 I0=200#200            # sourced current [Amps]
 phi0=0*np.pi
 
-psiC_s=0.00015#e-7         # guess at \Psi_C initial value at resonant surface
-psiS_s=6.5e-5#1e-6#e-7         # guess at \Psi_S initial value at resonant surface
+psiC_s_guess=2e-4#e-7         # guess at \Psi_C initial value at resonant surface
+psiS_s_guess=psiC_s_guess/2.#1e-6#e-7         # guess at \Psi_S initial value at resonant surface
 
 ## machine constants
 m=2
@@ -390,11 +397,15 @@ mu0=4*np.pi*1e-7
 ### main code
         
 # create radial domain
-r=np.linspace(0,r_wall,nPoints+2)
+r=np.linspace(0,r_wall,nPoints)
 dr=r[1]-r[0]
 
 # create time domain
 t=np.arange(0,tStop+dt,dt)
+
+# derived constants
+zeta=dt*k*r_limiter**2*omegaR
+eta=dt*Omega
 
 # create sourced current 
 I0=np.zeros(len(t))#np.sin(Omega*t+phi0)
@@ -408,8 +419,8 @@ j=calcCurrentProfileFromIP(r,r_limiter=r_limiter,iP=iP,
 djdr=firstOrderCenterDiff(r,j)
 
 # create q profile
-q=quadraticQProfile(r,q0=q_offset,r1=r_limiter,q1=q_limiter)
-#q=cylindricalQApproximation(r,r_limiter,l)
+#q=quadraticQProfile(r,q0=q_offset,r1=r_limiter,q1=q_limiter)
+q=cylindricalQApproximation(r,r_limiter,l)
 
 # calculate gamma terms
 gamma1=calcGamma1(r)
@@ -424,14 +435,14 @@ r_surf=r[r_surf_index]
 r_limiter_index=findNearest(r,r_limiter)
 
 # calculate mu, its radial derivative, and its value at the mode surface
-mu=1/q
-dmudr=firstOrderCenterDiff(r,mu)
+#mu=1/q
+dmudr=firstOrderCenterDiff(r,1./q)
 dmudr_surf=dmudr[r_surf_index]
 
 
 # initialize beta
-#betaC=np.zeros(len(r))
-#betaS=np.zeros(len(r))
+betaC=np.zeros((len(r),len(t)))
+betaS=np.zeros((len(r),len(t)))
 
 # initialize island width
 W=np.zeros(len(t))
@@ -441,8 +452,14 @@ BC=np.zeros(len(t))
 BS=np.zeros(len(t))
 
 # initialize PsiC and PsiS
-PsiC=np.zeros(len(r))
-PsiS=np.zeros(len(r))
+PsiC=np.zeros((len(r),len(t)))
+PsiS=np.zeros((len(r),len(t)))
+
+# initialize PsiC and PsiS at the surface
+psiC_s=np.zeros(len(t))
+psiC_s[0]=psiC_s_guess
+psiS_s=np.zeros(len(t))
+psiS_s[0]=psiS_s_guess
 
 # set reference timer
 timerRef=time.time()
@@ -454,7 +471,7 @@ domainChange=np.zeros(len(t),dtype=bool)
 for i in range(0,len(t)):#len(t)):
     
     # update island width
-    W[i]=width(r_surf,dmudr_surf,psiC_s,psiS_s)
+    W[i]=width(r_surf,dmudr_surf,psiC_s[i],psiS_s[i])
     
     # break up domain into inner (r<r_surface-W/2), outer (r>r_surface+W/2), and
     # middle (r_surface-W/2 <= r <= r_surface+W/2)
@@ -463,32 +480,37 @@ for i in range(0,len(t)):#len(t)):
     (inRange,midRange,outRange,domainChange[i])=findDomainRanges(r,r_surf_index,W[i],midRange)
   
     # update betas
-    (betaC,betaS)=calcBeta(r,I0[i],r_limiter,r_limiter_index,midRange,psiC_s,psiS_s)
+    (betaC[:,i],betaS[:,i])=calcBeta(r,I0[i],r_limiter,r_limiter_index,midRange,psiC_s[i],psiS_s[i])
     
     # create matrices
-    if True:#domainChange[i]:
+    if domainChange[i]:
         AInner=createA(r[inRange],gamma1[inRange],gamma0[inRange],gammaM1[inRange])
         AOuter=createA(r[outRange],gamma1[outRange],gamma0[outRange],gammaM1[outRange])
 
     # solve BVP
-    PsiC[inRange]=sparse.linalg.spsolve(AInner,betaC[inRange])
-    PsiS[inRange]=sparse.linalg.spsolve(AInner,betaS[inRange])
-    PsiC[outRange]=sparse.linalg.spsolve(AOuter,betaC[outRange])
-    PsiS[outRange]=sparse.linalg.spsolve(AOuter,betaS[outRange])
-    PsiC[midRange]=psiC_s
-    PsiS[midRange]=psiS_s
+    PsiC[inRange,i]=sparse.linalg.spsolve(AInner,betaC[inRange,i])
+    PsiS[inRange,i]=sparse.linalg.spsolve(AInner,betaS[inRange,i])
+    PsiC[outRange,i]=sparse.linalg.spsolve(AOuter,betaC[outRange,i])
+    PsiS[outRange,i]=sparse.linalg.spsolve(AOuter,betaS[outRange,i])
+    PsiC[midRange,i]=psiC_s[i]
+    PsiS[midRange,i]=psiS_s[i]
     
     # solve for field at r=b
-    BC[i]=(PsiC[outRange[-1]]-PsiC[outRange[-2]])/dr
-    BS[i]=(PsiS[outRange[-1]]-PsiS[outRange[-2]])/dr
+    BC[i]=(PsiC[outRange[-1],i]-PsiC[outRange[-2],i])/dr
+    BS[i]=(PsiS[outRange[-1],i]-PsiS[outRange[-2],i])/dr
     
     # solve for \Delta'
-    deltaP_C=(-(PsiC[midRange[0]-1]-PsiC[midRange[0]-2])/dr+(PsiC[midRange[-1]+2]-PsiC[midRange[-1]+1])/dr)/psiC_s
-    deltaP_S=(-(PsiS[midRange[0]-1]-PsiS[midRange[0]-2])/dr+(PsiS[midRange[-1]+2]-PsiS[midRange[-1]+1])/dr)/psiS_s
+    deltaP_C=(-(PsiC[midRange[0]-1,i]-PsiC[midRange[0]-2,i])/dr+(PsiC[midRange[-1]+2,i]-PsiC[midRange[-1]+1,i])/dr)/psiC_s[i]
+    deltaP_S=(-(PsiS[midRange[0]-1,i]-PsiS[midRange[0]-2,i])/dr+(PsiS[midRange[-1]+2,i]-PsiS[midRange[-1]+1,i])/dr)/psiS_s[i]
     
     # evolve in time - forward Euler
-    psiC_s=psiC_s+dt*(k*r_limiter**2*omegaR*deltaP_C/W[i]*psiC_s-Omega*psiS_s)
-    psiS_s=psiS_s+dt*(k*r_limiter**2*omegaR*deltaP_S/W[i]*psiS_s+Omega*psiC_s)
+    if i < len(t)-1:
+        psiC_s[i+1]=psiC_s[i]*(1+zeta*deltaP_C/W[i])-eta*psiS_s[i]
+        psiS_s[i+1]=psiS_s[i]*(1+zeta*deltaP_S/W[i])+eta*psiC_s[i]
+#    psiC_s=psiC_s+dt*(k*r_limiter**2*omegaR*deltaP_C/W[i]*psiC_s-Omega*psiS_s)
+#    psiS_s=psiS_s+dt*(k*r_limiter**2*omegaR*deltaP_S/W[i]*psiS_s+Omega*psiC_s)
+#    psiC_s=psiC_s+(dt*k*r_limiter**2*omegaR*deltaP_C/W[i]*psiC_s-dt*Omega*psiS_s)
+#    psiS_s=psiS_s+dt*(k*r_limiter**2*omegaR*deltaP_S/W[i]*psiS_s+Omega*psiC_s)
     
     # print progress
     if (time.time()-timerRef)>10:
@@ -496,43 +518,18 @@ for i in range(0,len(t)):#len(t)):
         timerRef=time.time()
         
     # plot PsiC and PsiS
-    if np.mod(i,40)==0:
-        f,ax = plt.subplots(1)
-        ax2=ax.twinx()
-#        plt.figure()
-        ax.set_title('t=%.6f, dt=%.6f, n=%d' % (t[i], dt, nPoints))
-        p1=ax.plot(r,PsiC,label='PsiC')
-        p2=ax.plot(r,PsiS,'--',label='PsiS')
-        p3=ax2.plot(r[inRange],betaC[inRange],'r',label=r'$\beta_C$')
-        ax2.plot(r[outRange],betaC[outRange],'r')
-        lns = p1+p2+p3
-        labs = [count.get_label() for count in lns]
-        ax.legend(lns, labs)
-        ax.set_ylim([-0.0002,0.0002])
-        ax2.set_ylabel(r'$\beta_C$',color='r')
-        ylim=ax2.get_ylim()
-        ax2.set_ylim([-0.0002,0.0002])
-        f.savefig('t_%.6f.png' % (t[i]))
-        plt.close(f)
+    if np.mod(i,400)==0:
+        psiFrame(i)
 
 
 # plot initial conditions
 plotInitialConditions()
 
+# plot final state
+plotFinalState()
 #
 #
-f, axarr = plt.subplots(3, sharex=True)
-axarr[0].plot(t,BC*1e4,'r.',label=r'B$_C(r_{wall})$')
-axarr[0].plot(t,BS*1e4,'b.',label=r'B$_S(r_{wall})$')
-axarr[0].set_ylabel('T')
-axarr[0].legend()
-axarr[1].plot(t,W,'.r',label='island width')
-axarr[1].set_ylabel('m')
-axarr[1].legend()
-axarr[2].plot(t,I0,label='Sourced Current')
-axarr[2].set_xlabel('Time (s)')
-axarr[2].set_ylabel('A')
-axarr[2].legend()
+
 #
 #plotPsiOfR(rA,rB,PsiC_A,PsiS_A,PsiC_B,PsiS_B)
 #plotBeta(rA,rB,betaC_A,betaS_A,betaC_B,betaS_B)
@@ -541,3 +538,60 @@ temp=np.average(domainChange)*1e2
 print('Domains changed %.2f %% of the time' % temp)
 #plt.figure()
 #plt.plot(t,domainChange)
+
+
+
+
+
+#import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+#import numpy as np
+
+class animatePlot(object):
+    """An animated scatter plot using matplotlib.animations.FuncAnimation."""
+    def __init__(self,step=10):
+        
+        
+        self.fig, self.ax = plt.subplots()
+        self.ax2=self.ax.twinx()
+        
+        # initialize
+        i=0
+        self.p1=self.ax.plot(r,PsiC[:,i],label='PsiC') #,animated=True
+        self.p2=self.ax.plot(r,PsiS[:,i],'--',label='PsiS')
+        self.p3=self.ax2.plot(r[inRange],betaC[inRange,i],'r',label=r'$\beta_C$') 
+        self.p4=self.ax2.plot(r[outRange],betaC[outRange,i],'r') 
+        lns = self.p1+self.p2+self.p3
+        labs = [count.get_label() for count in lns]
+        self.ax.legend(lns, labs)
+        self.ax.set_ylim([-0.0002,0.0002])
+        self.ax2.set_ylabel(r'$\beta_C$',color='r')
+        self.ax2.set_ylim([-0.0002,0.0002]) 
+        self.ax.set_title('Time = %.6f/%.6f' % (t[i], t[-1]))
+        
+        
+        self.ani = animation.FuncAnimation(self.fig, self._update, frames=np.arange(0,len(t),step),interval=200) # , blit=True
+
+
+    def _update(self, i):
+        """Update the plot."""
+        
+        self.p1[0].set_ydata(PsiC[:,i])
+        self.p2[0].set_ydata(PsiS[:,i])
+        self.p3[0].set_xdata(r[inRange])
+        self.p3[0].set_ydata(betaC[inRange,i])
+        self.p4[0].set_xdata(r[outRange])
+        self.p4[0].set_ydata(betaC[outRange,i])
+        self.ax.set_title('Time = %.6f/%.6f' % (t[i], t[-1]))
+        return self.p1,
+
+    def show(self):
+        plt.show()
+        
+    def saveAsGif(self,fileName,dpi=75):        
+        self.ani.save(fileName, dpi=dpi, writer='imagemagick')
+
+#if __name__ == '__main__':
+a = animatePlot()
+a.show()
+a.saveAsGif('temp.gif')
