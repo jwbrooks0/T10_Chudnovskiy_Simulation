@@ -154,10 +154,12 @@ def calcBeta(r,I0,r_limiter,r_limiter_index,midRange,psiC_s,psiS_s):
     betaC[0]=0
     betaC[-1]=0
     betaC[midRange[0]-1]=psiC_s
+    betaC[midRange]=psiC_s
     betaC[midRange[-1]+1]=psiC_s
     betaS[0]=0
     betaS[-1]=0
     betaS[midRange[0]-1]=psiS_s
+    betaS[midRange]=psiS_s
     betaS[midRange[-1]+1]=psiS_s
     
     return (betaC,betaS)
@@ -559,8 +561,9 @@ class animatePlot(object):
         i=0
         self.p1=self.ax.plot(r,PsiC[:,i],label='PsiC') #,animated=True
         self.p2=self.ax.plot(r,PsiS[:,i],'--',label='PsiS')
-        self.p3=self.ax2.plot(r[inRange],betaC[inRange,i],'r',label=r'$\beta_C$') 
-        self.p4=self.ax2.plot(r[outRange],betaC[outRange,i],'r') 
+        self.p3=self.ax2.plot(r,betaC[:,i],'r',label=r'$\beta_C$') 
+#        self.p3=self.ax2.plot(r[inRange],betaC[inRange,i],'r',label=r'$\beta_C$') 
+#        self.p4=self.ax2.plot(r[outRange],betaC[outRange,i],'r') 
         lns = self.p1+self.p2+self.p3
         labs = [count.get_label() for count in lns]
         self.ax.legend(lns, labs)
@@ -578,10 +581,11 @@ class animatePlot(object):
         
         self.p1[0].set_ydata(PsiC[:,i])
         self.p2[0].set_ydata(PsiS[:,i])
-        self.p3[0].set_xdata(r[inRange])
-        self.p3[0].set_ydata(betaC[inRange,i])
-        self.p4[0].set_xdata(r[outRange])
-        self.p4[0].set_ydata(betaC[outRange,i])
+#        self.p3[0].set_xdata(r[inRange])
+        self.p3[0].set_ydata(betaC[:,i])
+#        self.p3[0].set_ydata(betaC[inRange,i])
+#        self.p4[0].set_xdata(r[outRange])
+#        self.p4[0].set_ydata(betaC[outRange,i])
         self.ax.set_title('Time = %.6f/%.6f' % (t[i], t[-1]))
         return self.p1,
 
