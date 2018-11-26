@@ -366,7 +366,7 @@ def psiFrame(i):
     
 ## inputs
 nPoints=1000 +1       # number of radial grid points
-tStop=2.0e-2          # duration of simulation [seconds]
+tStop=1e-2          # duration of simulation [seconds]
 dt=1e-5           # time step [seconds]
 
 I0=200#200            # sourced current [Amps]
@@ -564,9 +564,9 @@ class animatePlot(object):
         lns = self.p1+self.p2+self.p3
         labs = [count.get_label() for count in lns]
         self.ax.legend(lns, labs)
-        self.ax.set_ylim([-0.0002,0.0002])
+        self.ax.set_ylim([-0.0001,0.0001])
         self.ax2.set_ylabel(r'$\beta_C$',color='r')
-        self.ax2.set_ylim([-0.0002,0.0002]) 
+        self.ax2.set_ylim([-0.0001,0.0001]) 
         self.ax.set_title('Time = %.6f/%.6f' % (t[i], t[-1]))
         
         
