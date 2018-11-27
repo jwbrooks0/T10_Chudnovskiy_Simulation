@@ -10,4 +10,4 @@ Feedforward results:
 
 TODO(John) Does the slow time scale need a 2pi ?
 
-TODO(John) The beta term appears to have the wrong sign, but it works.  If I flip the sign, it stops working.  Not sure what is wrong.  
+TODO(John) Implement feedback portion of code

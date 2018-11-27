@@ -78,11 +78,11 @@ To solve Eq.~\ref{eq:BVPEquations}, it first needs to be discretized.  Of note, 
 
 \begin{equation} \label{eq:BVPSolved}
 \begin{split}
- \frac{\partial \Psi^n}{\partial r} + r \frac{\partial^2 \Psi^n}{\partial r^2} -\alpha(r)  \Psi^n  & = - \beta(r,t) \\ 
- \frac{\Psi^{n+1}-\Psi^{n-1}}{2\Delta r}+r\left(\frac{\Psi^{n+1}-2\Psi^{n}+\Psi^{n-1}}{\Delta r^2}\right)-\alpha(r)\Psi^n & = - \beta(r,t)  \\
-  \Psi^{n+1}\left(\frac{1}{2 \Delta r}+\frac{r}{\Delta r^2 }\right) + \Psi^n\left( \frac{-2r}{\Delta r^2} -\alpha(r) \right) + \Psi^{n-1}\left(-\frac{1}{2\Delta r} + \frac{r}{\Delta r^2} \right) & = - \beta(r,t) \\
-  \Psi^{n+1} \ \gamma_{+1}(r) + \Psi^n \ \gamma_{0}(r) + \Psi^{n-1} \ \gamma_{-1}(r) & = - \beta(r,t) \\
-A(r) \Psi(r) & = -\beta(r,t) \\
+ \frac{\partial \Psi^n}{\partial r} + r \frac{\partial^2 \Psi^n}{\partial r^2} -\alpha(r)  \Psi^n  & = + \beta(r,t) \\ 
+ \frac{\Psi^{n+1}-\Psi^{n-1}}{2\Delta r}+r\left(\frac{\Psi^{n+1}-2\Psi^{n}+\Psi^{n-1}}{\Delta r^2}\right)-\alpha(r)\Psi^n & = + \beta(r,t)  \\
+  \Psi^{n+1}\left(\frac{1}{2 \Delta r}+\frac{r}{\Delta r^2 }\right) + \Psi^n\left( \frac{-2r}{\Delta r^2} -\alpha(r) \right) + \Psi^{n-1}\left(-\frac{1}{2\Delta r} + \frac{r}{\Delta r^2} \right) & = + \beta(r,t) \\
+  \Psi^{n+1} \ \gamma_{+1}(r) + \Psi^n \ \gamma_{0}(r) + \Psi^{n-1} \ \gamma_{-1}(r) & = + \beta(r,t) \\
+A(r) \Psi(r) & = +\beta(r,t) \\
 \end{split}
 \end{equation}
 
@@ -122,7 +122,7 @@ Above, the continuous form of $\beta$ is
 \begin{split}
 \beta(r,t) &= \left\{
 \begin{array}{l l}
-\mu_0r \cdot \iota(t) \delta (r-a) & \text{ for } \Psi_C \\
+- \mu_0r \cdot \iota(t) \delta (r-a) & \text{ for } \Psi_C \\
 0 & \text{ for } \Psi_S\\
 \end{array} \right. \\\
 \end{split}
@@ -140,7 +140,7 @@ and it needs to be solved for all four $\Psi$ terms.  In addition, the first and
 \end{bmatrix}^T, \\
 \beta_{C \ outside}(t) &= 
 \begin{bmatrix}
-\Psi_{C}(t,r_s), & 0, & \ldots &0, &\mu_0r_s \cdot \iota(t)/\Delta r,  &0,&\ldots &  0 
+\Psi_{C}(t,r_s), & 0, & \ldots &0, &-\mu_0r_s \cdot \iota(t)/\Delta r,  &0,&\ldots &  0 
 \end{bmatrix}^T, \\
 \beta_{S \ outside}(t) &= 
 \begin{bmatrix}
@@ -178,12 +178,12 @@ In addition, first order center differencing was used to discretize the differen
 
 The BVP problem, discussed in the previous section, is solved for the domain inside of the rational surface and outside of the rational surface.  The time evolution of the tearing mode only occurs at $r_s$ and is evolved in time with a first order forward Euler step.  The solution for each time advance provides the boundary conditions for the BVPs which then need to be resolved and then the time advanced again.  
 
-The tearing modes evolution equations are
+The tearing mode's evolution equations are
 
 \begin{equation} \label{eq3}
 \begin{split}
  & \frac{\partial \Psi_{C,r_s}}{\partial t} =k a^2 \omega_R \frac{\Delta'_C(W)}{W}\Psi_{C,r_s}-\Omega \Psi_{S,r_s} \\
-  & \frac{\partial \Psi_{S,r_s}}{\partial t} =k a^2 \omega_R \frac{\Delta'_S(W)}{W}\Psi_{S,r_s}-\Omega \Psi_{C,r_s}
+  & \frac{\partial \Psi_{S,r_s}}{\partial t} =k a^2 \omega_R \frac{\Delta'_S(W)}{W}\Psi_{S,r_s}+\Omega \Psi_{C,r_s}
 \end{split} 
 \end{equation} 
 
@@ -198,7 +198,12 @@ Discretizing and solving, it takes the form
 \Psi_{C,r_s}^{n+1} &=\Psi_{C,r_s}^{n}\left( 1 + \zeta \frac{\Delta'^{\ n}_C(W^{n})}{W^{n}}\right) - \eta \Psi_{S,r_s}^{n}   \\
 \end{split} 
 \end{equation} 
-
+and
+\begin{equation} \label{eq3}
+\begin{split}
+\Psi_{S,r_s}^{n+1} &=\Psi_{S,r_s}^{n}\left( 1 + \zeta \frac{\Delta'^{\ n}_S(W^{n})}{W^{n}}\right) + \eta \Psi_{C,r_s}^{n}   \\
+\end{split} 
+\end{equation} 
 where
 
 

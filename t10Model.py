@@ -148,7 +148,7 @@ def calcBeta(r,Jr,r_limiter,r_limiter_index,midRange,psiC_s,psiS_s):
     
     # add current source term
     iota=m*Jr/2/r_limiter/dr
-    betaC[r_limiter_index]=iota*mu0*r_limiter
+    betaC[r_limiter_index]=-iota*mu0*r_limiter
 
     # impose boundary conditions
     betaC[0]=0
@@ -572,8 +572,8 @@ class animatePlot(object):
         
         # initialize
         i=0
-        self.p1=self.ax.plot(r,PsiC[:,i],label='PsiC') #,animated=True
-        self.p2=self.ax.plot(r,PsiS[:,i],'--',label='PsiS')
+        self.p1=self.ax.plot(r,PsiC[:,i],label=r'$\Psi_C$') #,animated=True
+        self.p2=self.ax.plot(r,PsiS[:,i],'--',label=r'$\Psi_S$')
         self.p3=self.ax2.plot(r,betaC[:,i],'r',label=r'$\beta_C$') 
 #        self.p3=self.ax2.plot(r[inRange],betaC[inRange,i],'r',label=r'$\beta_C$') 
 #        self.p4=self.ax2.plot(r[outRange],betaC[outRange,i],'r') 
