@@ -215,6 +215,14 @@ where
 Note that the prime symbol ($'$) is the radial derivative.  
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Adaptive Radial Domain Discretization}
+As previously mentioned, the radial domain is solved over three regions: the region inside the resonant surface ($0<r<r_s-W/2$), the resonant surface ($r_s-W/2<r<r_s+W/2$ and the region outside ($r_s+W/2<r<b$).  The middle region is assumed to have constant $\Psi$ throughout, and only the center point (at $r_s$) is evolved in time.  This in turn sets the boundary conditions for the BVPs on either side of it.  
+
+The radial domain, $0 \leq r \leq b$, is discretized into $N$ grid points with uniform spacing, $\Delta r$.  However, the total number of points within each domain is allowed to change as the width of the island grows and shrinks.  For example, if the island grows by 10 grid points, the center domain is expanded by 10 grid points, and inner and outer domains each contract by 5 grid points.  The advantage to solving it this way is that the $A$ matrix for the inner and outer sub-domains only needs to be partially resolved.  Were I to hold a fixed number of points in each of the three domains, each $A$ matrix would have to be fully resolved.  The downside to this method is that the resolution for each sub-domain changes with the island growth. 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Initial Conditions}
 
 The 2003 T-10 paper is a little vague in many regards but especially when it comes to its ICs.  Fortunately, a 2014 T-10 paper provides more details, but it is unclear if they are the same ICs that the 2003 paper used.  Below, I summarize the ICs that I'm using. 
@@ -281,8 +289,22 @@ q(r>a)=\frac{2\pi r^2B_T}{R\mu_0I_p}
 Fig.~\ref{fig:jAndQ}b shows $q(r)$ and the radial derivative of $1/q(r)$.  
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Feedforward Results}
+
+My first attempt to reproduce Chudnovskiy's work \cite{2003} is to reproduce his Figure 9.  Figure~\ref{fig:FFResults} below shows my reproduction.  There are some differences between the two, but I believe most of these are due to differences in initial conditions as these were not thoroughly documented in Chudnovskiy's work \cite{2003}.  
+
+\begin{figure}[htb]
+	\includegraphics[width=15cm]{images/feedforwardResults.png}
+	\caption{Feedforward results
+		\label{fig:FFResults}}    
+\end{figure} 
 
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Feedback Results}
+\ldots
 
 %----------------------------------------------------------------------------------------
 %	PROBLEM 2
