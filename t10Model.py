@@ -139,7 +139,7 @@ def findNearest(array,value):
     
 ## misc parameter calculations
     
-def calcBeta(r,I0,r_limiter,r_limiter_index,midRange,psiC_s,psiS_s):
+def calcBeta(r,Jr,r_limiter,r_limiter_index,midRange,psiC_s,psiS_s):
     mu0=4*np.pi*1e-7
     dr=r[1]-r[0]
     
@@ -147,7 +147,7 @@ def calcBeta(r,I0,r_limiter,r_limiter_index,midRange,psiC_s,psiS_s):
     betaS=np.zeros(len(r))
     
     # add current source term
-    iota=m*I0/2/r_limiter/dr
+    iota=m*Jr/2/r_limiter/dr
     betaC[r_limiter_index]=iota*mu0*r_limiter
 
     # impose boundary conditions
@@ -333,19 +333,22 @@ def plotInitialConditions():
     labs = [i.get_label() for i in lns]
     ax.legend(lns, labs)#, loc=0)
     
-def plotFinalState():
+def plotFinalState(tStart,tStop):
+    iStart=findNearest(t,tStart)
+    iStop=findNearest(t,tStop)
     f, axarr = plt.subplots(3, sharex=True)
-    axarr[0].plot(t,BC*1e4,'r.',label=r'B$_C(r_{wall})$')
-    axarr[0].plot(t,BS*1e4,'b.',label=r'B$_S(r_{wall})$')
-    axarr[0].set_ylabel('T')
+    axarr[0].plot(t[iStart:iStop+1],BC[iStart:iStop+1]*1e4,'r',label=r'B$_C(r_{wall})$')
+    axarr[0].plot(t[iStart:iStop+1],BS[iStart:iStop+1]*1e4,'b',label=r'B$_S(r_{wall})$')
+    axarr[0].set_ylabel('Gauss')
     axarr[0].legend()
-    axarr[1].plot(t,W,'.r',label='island width')
+    axarr[1].plot(t[iStart:iStop+1],W[iStart:iStop+1],'r',label='island width')
     axarr[1].set_ylabel('m')
     axarr[1].legend()
-    axarr[2].plot(t,I0,label='Sourced Current')
+    axarr[2].plot(t[iStart:iStop+1],J[iStart:iStop+1],label='Sourced Current')
     axarr[2].set_xlabel('Time (s)')
     axarr[2].set_ylabel('A')
     axarr[2].legend()
+    axarr[2].set_xlim([0,tStop])
 
 def psiFrame(i):
     fig,ax = plt.subplots()
@@ -368,10 +371,10 @@ def psiFrame(i):
     
 ## inputs
 nPoints=1000 +1       # number of radial grid points
-tStop=1e-2          # duration of simulation [seconds]
+tStop=5.5e-2#1e-2 #5.5e-2         # duration of simulation [seconds]
 dt=1e-5           # time step [seconds]
 
-I0=200#200            # sourced current [Amps]
+J0=200#200            # sourced current [Amps]
 phi0=0*np.pi
 
 psiC_s_guess=2e-4#e-7         # guess at \Psi_C initial value at resonant surface
@@ -410,8 +413,18 @@ zeta=dt*k*r_limiter**2*omegaR
 eta=dt*Omega
 
 # create sourced current 
-I0=np.zeros(len(t))#np.sin(Omega*t+phi0)
-I0[np.where(t>t[-1]/2)]=5e2
+J=np.zeros(len(t))#np.sin(Omega*t+phi0)
+if False:
+    J[np.where(t>t[-1]/2)]=J0
+if True:
+    index1=np.where((t>=1e-2)&(t<=2.5e-2))[0]
+    J[index1]=J0*np.sin(2*np.pi*1.5e3*(t[index1]-t[index1][0]))
+    index2=np.where((t>=3e-2)&(t<=3.5e-2))[0]
+    J[index2]=J0*np.sqrt(1-(t[index2]-0.5e-2-3e-2)**2/(.5e-2)**2)
+    index3=np.where((t>=3.5e-2)&(t<=4e-2))[0]    
+    J[index3]=J0
+    index4=np.where((t>=4e-2)&(t<=4.5e-2))[0]
+    J[index4]=J0*np.sqrt(1-(t[index4]-4e-2)**2/(.5e-2)**2)
 
 # current profile and derivative profile
 l=q_limiter/q_offset-1
@@ -482,7 +495,7 @@ for i in range(0,len(t)):#len(t)):
     (inRange,midRange,outRange,domainChange[i])=findDomainRanges(r,r_surf_index,W[i],midRange)
   
     # update betas
-    (betaC[:,i],betaS[:,i])=calcBeta(r,I0[i],r_limiter,r_limiter_index,midRange,psiC_s[i],psiS_s[i])
+    (betaC[:,i],betaS[:,i])=calcBeta(r,J[i],r_limiter,r_limiter_index,midRange,psiC_s[i],psiS_s[i])
     
     # create matrices
     if domainChange[i]:
@@ -528,7 +541,7 @@ for i in range(0,len(t)):#len(t)):
 plotInitialConditions()
 
 # plot final state
-plotFinalState()
+plotFinalState(0.15e-2,t[-1])
 #
 #
 
@@ -567,9 +580,9 @@ class animatePlot(object):
         lns = self.p1+self.p2+self.p3
         labs = [count.get_label() for count in lns]
         self.ax.legend(lns, labs)
-        self.ax.set_ylim([-0.0001,0.0001])
+        self.ax.set_ylim([-0.00015,0.00015])
         self.ax2.set_ylabel(r'$\beta_C$',color='r')
-        self.ax2.set_ylim([-0.0001,0.0001]) 
+        self.ax2.set_ylim([-0.00015,0.00015]) 
         self.ax.set_title('Time = %.6f/%.6f' % (t[i], t[-1]))
         
         
