@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt; plt.close('all')
 import scipy.sparse as sparse
 import time as time
+import scipy.sparse.linalg as linalg
 #from matplotlib.animation import FuncAnimation as _FuncAnimation
 
 #import hbtepLib as hbt; reload(hbt)
@@ -49,7 +50,7 @@ def findDomainRanges(r,r_surf_index,W,oldMiddleRange):
     return (innerIndexRange,middleIndexRange,outerIndexRange,domainChange)
         
 
-def calcCurrentProfileFromIP(r,r_limiter,radialFunction,params,iP,j0GuessLeft=1e5,j0GuessRight=1e7,errorTol=1e-6):
+def calcCurrentProfileFromIP(r,r_limiter,radialFunction,params,iP,j0GuessLeft=1e5,j0GuessRight=1e7,j0Guess=1e6,errorTol=1e-6):
     """
     The references only provide I_P and do not provide j(r=0).  This 
     subfunction makes a guess at j(0) and calculates j(r) with the provided
@@ -84,7 +85,7 @@ def calcCurrentProfileFromIP(r,r_limiter,radialFunction,params,iP,j0GuessLeft=1e
     http://stackoverflow.com/questions/2566412/find-nearest-value-in-numpy-array
     """
     
-    j0Guess=np.mean([j0GuessLeft,j0GuessRight])
+#    j0Guess=np.mean([j0GuessLeft,j0GuessRight])
     j=radialFunction(r,[j0Guess,params[1],params[2]])
     ITotal=firstOrderIntegration(r,j*r)*2*np.pi
     error=(ITotal-iP)/iP
@@ -196,7 +197,9 @@ def createA(r,gamma1,gamma0,gammaM1):
     A[-1,-1]=1                          # enforces right BC
     A[-1,-2]=0                          # enforces right BC
     
-    return sparse.dia_matrix(A)
+#    return sparse.dia_matrix(A)
+    return sparse.csc_matrix(A) 
+#    return sparse.csr_matrix(A) 
     
     
 
@@ -291,45 +294,51 @@ def qProfileModel(r,j,BT,R):
 #    ax.plot((r_wall,r_wall),ylim,'--',color='grey')
 #    ax.set_ylim(ylim)
     
-def plotInitialConditions():
+def plotInitialConditions(y2Axis=False):
     
     
     # plot j(r) and dj(r)/dr    
     f,axx = plt.subplots(2,sharex=True)
     ax=axx[0]
-    ax2=ax.twinx()
     p1=ax.plot(r,j,'k',label='current profile')
-    p2=ax2.plot(r,djdr,'r',label='current profile derivative')
     #ax.set_xlabel('minor radius (m)')
     ax.set_ylabel(r'current density (A/m$^2$)')
-    ax2.set_ylabel(r'current density derivative (A/m$^3$)',color='r')
     ylim=ax.get_ylim()
     p3=ax.plot((r_surf,r_surf),ylim,'--',label=r'r$_{surf}$')
     p4=ax.plot((r_limiter,r_limiter),ylim,'--',label=r'r$_{limiter}$')
     p5=ax.plot((r_wall,r_wall),ylim,'--',label=r'r$_{wall}$')
     ax.set_ylim(ylim)
     #ax.legend()
-    lns = p1+p2+p3+p4+p5
+    if y2Axis==True:
+	    ax2=ax.twinx()
+	    p2=ax2.plot(r,djdr,'r',label='current profile derivative')
+	    ax2.set_ylabel(r'current density derivative (A/m$^3$)',color='r')
+	    lns = p1+p2+p3+p4+p5
+    else:
+		lns=p1+p3+p4+p5
     labs = [i.get_label() for i in lns]
     ax.legend(lns, labs)#, loc=0)
+    ax.ticklabel_format(style='sci',axis='y',scilimits=(0,0))
     
     
     # plot q(r) and d(1/q(r))/dr
-    #f,ax = plt.subplots(1)
     ax=axx[1]
-    ax2=ax.twinx()
     p1=ax.plot(r,q,'k',label='q(r)')
-    p2=ax2.plot(r,dmudr,'r',label=r'$\frac{\partial (1/q)}{\partial r}$')
     ax.set_xlabel('minor radius (m)')
     ax.set_ylabel(r'q')
-    ax2.set_ylabel(r'$\frac{\partial (1/q)}{\partial r}$',color='r')
     ylim=ax.get_ylim()
     p3=ax.plot((r_surf,r_surf),ylim,'--',label=r'r$_{surf}$')
     p4=ax.plot((r_limiter,r_limiter),ylim,'--',label=r'r$_{limiter}$')
     p5=ax.plot((r_wall,r_wall),ylim,'--',label=r'r$_{wall}$')
     ax.set_ylim(ylim)
     #ax.legend()
-    lns = p1+p2+p3+p4+p5
+    if y2Axis==True:
+	    ax2=ax.twinx()
+	    p2=ax2.plot(r,dmudr,'r',label=r'$\frac{\partial (1/q)}{\partial r}$')
+	    ax2.set_ylabel(r'$\frac{\partial (1/q)}{\partial r}$',color='r')
+	    lns = p1+p2+p3+p4+p5
+    else:
+	    lns = p1+p3+p4+p5	
     labs = [i.get_label() for i in lns]
     ax.legend(lns, labs)#, loc=0)
     
@@ -353,17 +362,19 @@ def plotFinalState(tStart,tStop):
 def psiFrame(i):
     fig,ax = plt.subplots()
     ax2=ax.twinx()  
-    p1=ax.plot(r,PsiC[:,i],label='PsiC')
-    p2=ax.plot(r,PsiS[:,i],'--',label='PsiS')
+    p1=ax.plot(r,PsiC[:,i],label=r'$\psi_C$')
+    p2=ax.plot(r,PsiS[:,i],'--',label=r'$\psi_S$')
     p3=ax2.plot(r[inRange],betaC[inRange,i],'r',label=r'$\beta_C$')   
     ax2.plot(r[outRange],betaC[outRange,i],'r')   
     lns = p1+p2+p3
     labs = [count.get_label() for count in lns]
     ax.legend(lns, labs)
     ax.set_ylim([-0.0002,0.0002])
+    ax.set_ylabel(r'$\psi$')
     ax2.set_ylabel(r'$\beta_C$',color='r')
-#    ylim=ax2.get_ylim()
-    ax2.set_ylim([-0.0002,0.0002])  
+    ax2.set_ylim([-0.0002,0.0002]) 
+    ax.ticklabel_format(style='sci',axis='y',scilimits=(0,0))
+    ax2.ticklabel_format(style='sci',axis='y',scilimits=(0,0)) 
         
         
 ########################################
@@ -371,8 +382,8 @@ def psiFrame(i):
     
 ## inputs
 nPoints=1000 +1       # number of radial grid points
-tStop=5.5e-2#1e-2 #5.5e-2         # duration of simulation [seconds]
-dt=1e-5           # time step [seconds]
+tStop=3.0e-2  #5.5e-2         # duration of simulation [seconds]
+dt=1e-5#1e-5           # time step [seconds]
 
 J0=200#200            # sourced current [Amps]
 phi0=0*np.pi
@@ -387,11 +398,11 @@ R=1.5
 BT=2.5
 iP=250e3
 Omega=1e3*2*np.pi
-omegaR=1/0.01
+omegaR=1/0.01 # multiplying by 2*pi seems to break the code.  Therefore, leave it as is.  
 k=np.pi
 r_wall=.39
 r_limiter=0.27
-q_offset=0.7/.85
+q_offset=0.7/.85 #q_offset and q_limiter appear to have very little to do with actual q values in the q profile....
 q_limiter=2.4
 
 ## physical constants
@@ -400,6 +411,8 @@ mu0=4*np.pi*1e-7
         
 ########################################
 ### main code
+
+feedback=True
         
 # create radial domain
 r=np.linspace(0,r_wall,nPoints)
@@ -414,9 +427,9 @@ eta=dt*Omega
 
 # create sourced current 
 J=np.zeros(len(t))#np.sin(Omega*t+phi0)
-if False:
+if False: #step function
     J[np.where(t>t[-1]/2)]=J0
-if True:
+if False: #feedforward 
     index1=np.where((t>=1e-2)&(t<=2.5e-2))[0]
     J[index1]=J0*np.sin(2*np.pi*1.5e3*(t[index1]-t[index1][0]))
     index2=np.where((t>=3e-2)&(t<=3.5e-2))[0]
@@ -430,7 +443,7 @@ if True:
 l=q_limiter/q_offset-1
 j=calcCurrentProfileFromIP(r,r_limiter=r_limiter,iP=iP,
                            radialFunction=wessonCurrentModel, 
-                           params=[1,r_limiter,l])
+                           params=[1,r_limiter,l],j0Guess=2783578.873)
 djdr=firstOrderCenterDiff(r,j)
 
 # create q profile
@@ -494,6 +507,9 @@ for i in range(0,len(t)):#len(t)):
         midRange=[]
     (inRange,midRange,outRange,domainChange[i])=findDomainRanges(r,r_surf_index,W[i],midRange)
   
+     
+    if t[i]>15e-3 and t[i]<30e-3 and feedback==True:
+		J[i]=10*(BS[i-1]-BS[i-2])/dt
     # update betas
     (betaC[:,i],betaS[:,i])=calcBeta(r,J[i],r_limiter,r_limiter_index,midRange,psiC_s[i],psiS_s[i])
     
@@ -503,10 +519,10 @@ for i in range(0,len(t)):#len(t)):
         AOuter=createA(r[outRange],gamma1[outRange],gamma0[outRange],gammaM1[outRange])
 
     # solve BVP
-    PsiC[inRange,i]=sparse.linalg.spsolve(AInner,betaC[inRange,i])
-    PsiS[inRange,i]=sparse.linalg.spsolve(AInner,betaS[inRange,i])
-    PsiC[outRange,i]=sparse.linalg.spsolve(AOuter,betaC[outRange,i])
-    PsiS[outRange,i]=sparse.linalg.spsolve(AOuter,betaS[outRange,i])
+    PsiC[inRange,i]=linalg.spsolve(AInner,betaC[inRange,i])
+    PsiS[inRange,i]=linalg.spsolve(AInner,betaS[inRange,i])
+    PsiC[outRange,i]=linalg.spsolve(AOuter,betaC[outRange,i])
+    PsiS[outRange,i]=linalg.spsolve(AOuter,betaS[outRange,i])
     PsiC[midRange,i]=psiC_s[i]
     PsiS[midRange,i]=psiS_s[i]
     
@@ -522,32 +538,24 @@ for i in range(0,len(t)):#len(t)):
     if i < len(t)-1:
         psiC_s[i+1]=psiC_s[i]*(1+zeta*deltaP_C/W[i])-eta*psiS_s[i]
         psiS_s[i+1]=psiS_s[i]*(1+zeta*deltaP_S/W[i])+eta*psiC_s[i]
-#    psiC_s=psiC_s+dt*(k*r_limiter**2*omegaR*deltaP_C/W[i]*psiC_s-Omega*psiS_s)
-#    psiS_s=psiS_s+dt*(k*r_limiter**2*omegaR*deltaP_S/W[i]*psiS_s+Omega*psiC_s)
-#    psiC_s=psiC_s+(dt*k*r_limiter**2*omegaR*deltaP_C/W[i]*psiC_s-dt*Omega*psiS_s)
-#    psiS_s=psiS_s+dt*(k*r_limiter**2*omegaR*deltaP_S/W[i]*psiS_s+Omega*psiC_s)
-    
+
     # print progress
     if (time.time()-timerRef)>10:
         print("step=%d/%d, \t time=%.6f" % (i,len(t),t[i]))
         timerRef=time.time()
         
     # plot PsiC and PsiS
-    if np.mod(i,400)==0:
-        psiFrame(i)
+#    if np.mod(i,400000)==0:
+#        psiFrame(i)
 
 
 # plot initial conditions
-plotInitialConditions()
+#plotInitialConditions(y2Axis=True)
+plotInitialConditions(y2Axis=False)
 
 # plot final state
 plotFinalState(0.15e-2,t[-1])
-#
-#
 
-#
-#plotPsiOfR(rA,rB,PsiC_A,PsiS_A,PsiC_B,PsiS_B)
-#plotBeta(rA,rB,betaC_A,betaS_A,betaC_B,betaS_B)
 
 temp=np.average(domainChange)*1e2
 print('Domains changed %.2f %% of the time' % temp)
@@ -575,8 +583,6 @@ class animatePlot(object):
         self.p1=self.ax.plot(r,PsiC[:,i],label=r'$\Psi_C$') #,animated=True
         self.p2=self.ax.plot(r,PsiS[:,i],'--',label=r'$\Psi_S$')
         self.p3=self.ax2.plot(r,betaC[:,i],'r',label=r'$\beta_C$') 
-#        self.p3=self.ax2.plot(r[inRange],betaC[inRange,i],'r',label=r'$\beta_C$') 
-#        self.p4=self.ax2.plot(r[outRange],betaC[outRange,i],'r') 
         lns = self.p1+self.p2+self.p3
         labs = [count.get_label() for count in lns]
         self.ax.legend(lns, labs)
@@ -608,7 +614,8 @@ class animatePlot(object):
     def saveAsGif(self,fileName,dpi=75):        
         self.ani.save(fileName, dpi=dpi, writer='imagemagick')
 
-#if __name__ == '__main__':
-a = animatePlot()
-a.show()
-a.saveAsGif('temp.gif')
+
+if False:
+	a = animatePlot()
+	a.show()
+	a.saveAsGif('temp.gif')

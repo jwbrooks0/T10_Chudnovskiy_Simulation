@@ -15,6 +15,14 @@
 % 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% install directions
+% ------------------
+%
+% if you get the error where stmaryrd.sty not installed, run
+% $ sudo apt-get install texlive-science
+% reference: https://askubuntu.com/questions/369268/missing-sty-package
+
 %----------------------------------------------------------------------------------------
 %	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
 %----------------------------------------------------------------------------------------
@@ -24,7 +32,7 @@
 \input{structure.tex} % Include the file specifying the document structure and custom commands
 
 %----------------------------------------------------------------------------------------
-%	ASSIGNMENT INFORMATION
+%	Title, author, institution, date, etc
 %----------------------------------------------------------------------------------------
 
 \title{T-10 paper simulation} % Title of the assignment
@@ -224,7 +232,7 @@ Note that the prime symbol ($'$) is the radial derivative.
 \section{Adaptive Radial Domain Discretization}
 As previously mentioned, the radial domain is solved over three regions: the region inside the resonant surface ($0<r<r_s-W/2$), the resonant surface ($r_s-W/2<r<r_s+W/2$ and the region outside ($r_s+W/2<r<b$).  The middle region is assumed to have constant $\Psi$ throughout, and only the center point (at $r_s$) is evolved in time.  This in turn sets the boundary conditions for the BVPs on either side of it.  
 
-The radial domain, $0 \leq r \leq b$, is discretized into $N$ grid points with uniform spacing, $\Delta r$.  However, the total number of points within each domain is allowed to change as the width of the island grows and shrinks.  For example, if the island grows by 10 grid points, the center domain is expanded by 10 grid points, and inner and outer domains each contract by 5 grid points.  The advantage to solving it this way is that the $A$ matrix for the inner and outer sub-domains only needs to be partially resolved.  Were I to hold a fixed number of points in each of the three domains, each $A$ matrix would have to be fully resolved.  The downside to this method is that the resolution for each sub-domain changes with the island growth. 
+The radial domain, $0 \leq r \leq b$, is discretized into $N$ grid points with uniform spacing, $\Delta r$.  However, the total number of points within each sub-domain is allowed to change as the width of the island grows and shrinks.  For example, if the island grows by 10 grid points, the center domain is expanded by 10 grid points, and inner and outer domains each contract by 5 grid points.  The advantage to solving it this way is that the $A$ matrix for the inner and outer sub-domains only needs to be partially resolved.  Were I to hold a fixed number of points in each of the three domains, each $A$ matrix would have to be fully resolved.  The downside to this method is that the resolution for each sub-domain changes with the island growth. 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
