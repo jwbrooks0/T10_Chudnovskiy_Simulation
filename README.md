@@ -24,3 +24,5 @@ TODO(John) Experiment with different ICs to make the results agree better
 
 TODO(John) Cleanup code to make it more user-friendly.  
 
+TODO(John) Figure out why the sign on the feedback gain is wrong.
+

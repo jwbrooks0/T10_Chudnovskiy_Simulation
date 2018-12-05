@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2018.12.5)  5 DEC 2018 09:13
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2018.12.5)  5 DEC 2018 17:25
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1190,21 +1190,24 @@ LaTeX Warning: Label `eq3' multiply defined.
 
 LaTeX Warning: Label `qCylindrical' multiply defined.
 
+
+LaTeX Warning: Label `fig:FFResults' multiply defined.
+
 )
 \openout1 = `main.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 38.
-LaTeX Font Info:    ... okay on input line 38.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 38.
-LaTeX Font Info:    ... okay on input line 38.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 38.
-LaTeX Font Info:    ... okay on input line 38.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 38.
-LaTeX Font Info:    ... okay on input line 38.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 38.
-LaTeX Font Info:    ... okay on input line 38.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 38.
-LaTeX Font Info:    ... okay on input line 38.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 46.
+LaTeX Font Info:    ... okay on input line 46.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 46.
+LaTeX Font Info:    ... okay on input line 46.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 46.
+LaTeX Font Info:    ... okay on input line 46.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 46.
+LaTeX Font Info:    ... okay on input line 46.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 46.
+LaTeX Font Info:    ... okay on input line 46.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 46.
+LaTeX Font Info:    ... okay on input line 46.
 \AtBeginShipoutBox=\box70
  (/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
@@ -1273,19 +1276,19 @@ ABD: EveryShipout initializing macros
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-LaTeX Font Info:    Try loading font information for U+msa on input line 40.
+LaTeX Font Info:    Try loading font information for U+msa on input line 48.
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Try loading font information for U+msb on input line 40.
+LaTeX Font Info:    Try loading font information for U+msb on input line 48.
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-LaTeX Font Info:    Try loading font information for U+stmry on input line 40.
+LaTeX Font Info:    Try loading font information for U+stmry on input line 48.
 
 (/usr/share/texlive/texmf-dist/tex/latex/stmaryrd/Ustmry.fd)
-LaTeX Font Info:    Try loading font information for T1+cmtt on input line 40.
+LaTeX Font Info:    Try loading font information for T1+cmtt on input line 48.
 
 (/usr/share/texlive/texmf-dist/tex/latex/base/t1cmtt.fd
 File: t1cmtt.fd 2014/09/29 v2.5h Standard LaTeX font definitions
@@ -1295,25 +1298,31 @@ File: t1cmtt.fd 2014/09/29 v2.5h Standard LaTeX font definitions
 <images/jAndQ.png, id=33, 578.8827pt x 476.982pt>
 File: images/jAndQ.png Graphic file (type png)
 <use images/jAndQ.png>
-Package pdftex.def Info: images/jAndQ.png  used on input line 273.
+Package pdftex.def Info: images/jAndQ.png  used on input line 281.
 (pdftex.def)             Requested size: 426.79134pt x 351.66563pt.
  [5 <./images/jAndQ.png>]
 <images/feedforwardResults.png, id=39, 940.2327pt x 513.117pt>
 File: images/feedforwardResults.png Graphic file (type png)
 <use images/feedforwardResults.png>
-Package pdftex.def Info: images/feedforwardResults.png  used on input line 303.
+Package pdftex.def Info: images/feedforwardResults.png  used on input line 311.
 
 (pdftex.def)             Requested size: 426.79134pt x 232.9127pt.
- [6 <./images/feedforwardResults.png>] (./main.aux)
+<images/feedbackResults.png, id=40, 462.528pt x 346.896pt>
+File: images/feedbackResults.png Graphic file (type png)
+<use images/feedbackResults.png>
+Package pdftex.def Info: images/feedbackResults.png  used on input line 324.
+(pdftex.def)             Requested size: 426.79134pt x 320.11154pt.
+ [6 <./images/feedforwardResults.png>] [7 <./images/feedbackResults.png>] (./ma
+in.aux)
 
 LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 25177 strings out of 494847
- 483747 string characters out of 6179080
+ 25181 strings out of 494847
+ 483874 string characters out of 6179080
  533185 words of memory out of 5000000
- 28124 multiletter control sequences out of 15000+600000
+ 28127 multiletter control sequences out of 15000+600000
  545763 words of font info for 65 fonts, out of 8000000 for 9000
  59 hyphenation exceptions out of 8191
  69i,23n,64p,10488b,275s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -1333,10 +1342,10 @@ f-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/
 fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/share/texlive/texmf-dist/fonts/ty
 pe1/public/amsfonts/cm/cmsy10.pfb></usr/share/texlive/texmf-dist/fonts/type1/pu
 blic/amsfonts/cm/cmsy7.pfb>
-Output written on main.pdf (6 pages, 351319 bytes).
+Output written on main.pdf (7 pages, 427698 bytes).
 PDF statistics:
- 311 PDF objects out of 1000 (max. 8388607)
- 74 compressed objects within 1 object stream
+ 318 PDF objects out of 1000 (max. 8388607)
+ 78 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
- 23 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 28 words of extra memory for PDF output out of 10000 (max. 10000000)
 
