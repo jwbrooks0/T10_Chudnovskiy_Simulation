@@ -92,7 +92,7 @@ def calcCurrentProfileFromIP(r,r_limiter,radialFunction,params,iP,j0GuessLeft=1e
 	error=(ITotal-iP)/iP
 	
 	count=0
-	
+	print('Starting iterative solver to calculated current density given the plasma current')
 	while(np.abs(error)>errorTol):
 		count+=1
 	
@@ -257,6 +257,9 @@ def wessonCurrentModel(r,params):
 ## q-profiles   
    
 def quadraticQProfile(r,q0,r1,q1):
+	"""
+	Fit a quadratic function to the provided BCs to get q(r)
+	"""
 	# quadratic model, q ~ r**2
 	# q(r=0) and q1(r=r1) are inputs
 	c=(q1-q0)/r1**2;
@@ -265,7 +268,11 @@ def quadraticQProfile(r,q0,r1,q1):
 	
 def cylindricalQApproximation(r,r_limiter,l):
 	"""
-	Recommended in Ivanov's 2014 paper. However, it is only valid for r<=a.  
+	Recommended in Ivanov's 2014 paper. 
+	
+	Notes
+	-----
+	The original source for q(r) is only valid for r<=a.  
 	To correct for this, I solved \int B_{\theta} dl = \mu I_p and 
 	q=\frac{rB_z}{RB_{\theta}} to provide q all the way out to r=b.
 	"""
@@ -313,8 +320,7 @@ def plotInitialConditions(y2Axis=False):
 	ax.legend(lns, labs)#, loc=0)
 	ax.ticklabel_format(style='sci',axis='y',scilimits=(0,0))
 	
-	
-	# plot q(r) and d(1/q(r))/dr
+	# plot q(r) 
 	ax=axx[1]
 	p1=ax.plot(r,q,'k',label='q(r)')
 	ax.set_xlabel('minor radius (m)')
@@ -325,7 +331,7 @@ def plotInitialConditions(y2Axis=False):
 	p5=ax.plot((r_wall,r_wall),ylim,'--',label=r'r$_{wall}$')
 	ax.set_ylim(ylim)
 	#ax.legend()
-	if y2Axis==True:
+	if y2Axis==True: # opertional, also plot deriv of 1/q
 		ax2=ax.twinx()
 		p2=ax2.plot(r,dmudr,'r',label=r'$\frac{\partial (1/q)}{\partial r}$')
 		ax2.set_ylabel(r'$\frac{\partial (1/q)}{\partial r}$',color='r')
@@ -373,8 +379,7 @@ def psiFrame(i):
 	ax2.set_ylim([-0.0002,0.0002]) 
 	ax.ticklabel_format(style='sci',axis='y',scilimits=(0,0))
 	ax2.ticklabel_format(style='sci',axis='y',scilimits=(0,0)) 
-	
-# animate function
+
 class animatePlot(object):
 	"""An animated scatter plot using matplotlib.animations.FuncAnimation."""
 	def __init__(self,step=10):
