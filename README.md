@@ -8,15 +8,27 @@ The [attached code](https://github.com/jwbrooks0/T10_Chudnovskiy_Simulation/blob
 
 Note that as of the present (Dec. 5, 2018), the code appears to be mostly working.  I've been able to mostly reproduce the feedforward and feedback portions of the simulation.  There are a few differences that are likely attributable to small differences in initial conditions and possibly small bugs.  I've tried altering the q-profile to create the 5 Guass amplitudes in the 2003 paper but have had limited success.
 
+
+### Initial conditions:
+
+![Initial conditions](https://github.com/jwbrooks0/T10_Chudnovskiy_Simulation/blob/master/latexWriteup/images/jAndQ.png)
+
 ### Feedforward results:
 
-![Feedforward results](https://github.com/jwbrooks0/T10_Chudnovskiy_Simulation/blob/master/feedforwardResults.png)
+![Feedforward results](https://github.com/jwbrooks0/T10_Chudnovskiy_Simulation/blob/master/latexWriteup/images/feedforwardResults.png)
 ![Feedforward animation](https://github.com/jwbrooks0/T10_Chudnovskiy_Simulation/blob/master/feedforwardAnimation.gif)
 
 
 ### Feedback results:
 
-![Feedforward results](https://github.com/jwbrooks0/T10_Chudnovskiy_Simulation/blob/master/feedbackResults.png)
+# Mode suppression
+
+![Feedforward results, mode suppression](https://github.com/jwbrooks0/T10_Chudnovskiy_Simulation/blob/master/latexWriteup/images/feedbackResults.png)
+
+
+# Mode amplification
+
+![Feedforward results, mode amplification](https://github.com/jwbrooks0/T10_Chudnovskiy_Simulation/blob/master/latexWriteup/images/feedbackResults2.png)
 
 ### Todo
 

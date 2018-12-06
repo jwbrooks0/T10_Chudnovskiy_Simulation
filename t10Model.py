@@ -509,7 +509,7 @@ for i in range(0,len(t)):#len(t)):
   
      
     if t[i]>15e-3 and t[i]<30e-3 and feedback==True:
-		J[i]=10*(BS[i-1]-BS[i-2])/dt
+		J[i]=-10*(BS[i-1]-BS[i-2])/dt
     # update betas
     (betaC[:,i],betaS[:,i])=calcBeta(r,J[i],r_limiter,r_limiter_index,midRange,psiC_s[i],psiS_s[i])
     
