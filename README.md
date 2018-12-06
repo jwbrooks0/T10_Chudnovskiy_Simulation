@@ -26,3 +26,5 @@ TODO(John) Cleanup code to make it more user-friendly.
 
 TODO(John) Figure out why the sign on the feedback gain is wrong.
 
+TODO(John) Non-dimensionalize the equations and then implement them
+
