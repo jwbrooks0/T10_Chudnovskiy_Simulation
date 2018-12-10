@@ -352,6 +352,7 @@ N. V. Ivanov, A.M. Kakurin,
 
 \end{thebibliography}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Appendix A - Nondimensionalizing the BVP}
 
 Presently, these nondimensional equations have not been implemented in the code.
@@ -362,7 +363,7 @@ We start by nondimensionalizing our variables and input parameters.
 \begin{split}
 \phi&\equiv\frac{\Psi}{\Psi_0} \\
 \rho&\equiv\frac{r}{r_0} \\
-\gamma&\equiv\frac{\iota}{\iota_0}
+\Gamma&\equiv\frac{J}{J_1}
 \end{split} 
 \end{equation} 
 and other terms
@@ -402,26 +403,27 @@ Starting on the BVP, we get
 
 \begin{equation} \label{wessonCurrentProfile}
 \begin{split}
- \frac{\partial \Psi}{\partial r} +r   \frac{\partial^2 \Psi}{\partial r^2} - \alpha \Psi & = - \mu_0r  \iota(t) \delta (r-a)\\ 
- \frac{\Psi_0}{r_0} \frac{\partial \phi}{\partial \rho} + r_0 \rho \frac{\Psi_0}{r_0^2}   \frac{\partial^2 \phi}{\partial \rho^2} - \frac{\alpha^*}{r_0} \Psi_0 \phi & = - \mu_0 r_0 \rho \iota_0 \gamma(t) \frac{\delta^* (\rho - 1)}{r_0}\\
-\frac{\partial \phi}{\partial \rho} + \rho   \frac{\partial^2 \phi}{\partial \rho^2} - \alpha^* \phi & = - \mu_0 \frac{r_0}{\Psi_0} \rho \iota_0 \gamma(t) \delta^* (\rho - 1)\\
-\frac{\partial \phi}{\partial \rho} + \rho   \frac{\partial^2 \phi}{\partial \rho^2} - \alpha^* \phi & =  \rho \gamma(t) \delta^* (\rho - 1)\\
+ \frac{\partial \Psi}{\partial r} +r   \frac{\partial^2 \Psi}{\partial r^2} - \alpha \Psi & = - \mu_0r  \frac{Jm}{2a} \delta (r-a)\\ 
+ \frac{\Psi_0}{r_0} \frac{\partial \phi}{\partial \rho} + r_0 \rho \frac{\Psi_0}{r_0^2}   \frac{\partial^2 \phi}{\partial \rho^2} - \frac{\alpha^*}{r_0} \Psi_0 \phi & = - \mu_0 r_0 \rho \frac{J_1 \Gamma}{2a} \frac{\delta (\rho - 1)}{a}\\
+\frac{\partial \phi}{\partial \rho} + \rho   \frac{\partial^2 \phi}{\partial \rho^2} - \alpha^* \phi & = - \frac{\mu_0 \rho \Gamma J_1 m}{2 \Psi_0} \delta (\rho - 1)\\
+\frac{\partial \phi}{\partial \rho} + \rho   \frac{\partial^2 \phi}{\partial \rho^2} - \alpha^* \phi & = - \rho \Gamma \delta (\rho - 1)\\
 \end{split} 
 \end{equation} 
 where
 \begin{equation} \label{wessonCurrentProfile}
 \begin{split}
-\iota_0 \equiv 1 \\
+J_1 \equiv 1 \\
 \end{split} 
 \end{equation} 
 and
 \begin{equation} \label{wessonCurrentProfile}
 \begin{split}
-\Psi_0 & \equiv - \mu_0 r_0
+\Psi_0 & \equiv  \frac{\mu_0 J_1 m}{2}
 \end{split} 
 \end{equation} 
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Appendix B - Nondimensionalizing the time evolution equation}
 
 We start by nondimensionalizing our variables
@@ -459,6 +461,28 @@ W & = \left. 4 \sqrt{ \frac{\sqrt{\Psi_C^2+\Psi_S^2}}{-r B_T\frac{\partial \mu}{
 \end{split} 
 \end{equation} 
 
+
+For convenience, we define
+\begin{equation} \label{}
+\begin{split}
+W &=  \left( -  \frac{16 R \Psi_1 }{\rho_s B_T \left.\frac{\partial \mu}{\partial \rho}\right|_{\rho_s}} \right)^{1/2} \left(\chi_C^2+\chi_S^2\right)^{1/4}\\
+& \equiv W_0 W^*\\
+\end{split} 
+\end{equation} 
+where the non-dimensional width is
+\begin{equation} \label{}
+\begin{split}
+W^*\equiv \left(\chi_C^2+\chi_S^2\right)^{1/4}\\
+\end{split} 
+\end{equation} 
+and the constant
+\begin{equation} \label{}
+\begin{split}
+W_0 \equiv \left( -  \frac{16 R \Psi_1 }{\rho_s B_T \left.\frac{\partial \mu}{\partial \rho}\right|_{\rho_s}} \right)^{1/2}
+\end{split} 
+\end{equation} 
+
+
 Finally, the time evolution equation starts by
 \begin{equation} \label{wessonCurrentProfile}
 \begin{split}
@@ -489,6 +513,19 @@ Similarly for $\chi_S$,
 \frac{\partial \chi_S}{\partial \tau} & =     \left(  \frac{1}{\chi_C^2+\chi_S^2} \right)^{1/4}  \left( \left[\frac{\partial \phi_S}{\partial \rho}\right]_{+}-\left[\frac{\partial \phi_S}{\partial \rho}\right]_{-}    \right) + \chi_C\\
 \end{split} 
 \end{equation}  
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Appendix C - Nondimensionalizing other equations}
+
+The mode measurements at the wall, $B_{C,S}$, are put in terms of non-dimensional terms below without being non-dimensionalized itself. 
+\begin{equation} \label{wessonCurrentProfile}
+\begin{split}
+B_{C,S} &= \frac{\partial \Psi_{C,S}}{\partial r} \\
+ &= \frac{\Psi_0}{r_0}\frac{\partial \phi_{C,S}}{\partial \rho} \\
+\end{split} 
+\end{equation}  
+
+
 
 \end{document}
 

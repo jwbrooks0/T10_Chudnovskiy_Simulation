@@ -1,7 +1,14 @@
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Dec 10 15:05:36 2018
+
+@author: john
+"""
+
 # -*- coding: utf-8 -*-
 """
 Created on Sun Nov  4 17:19:53 2018
-
 @author: john
 """
 import numpy as np
@@ -168,14 +175,12 @@ def calcBeta(r,Jr,r_limiter,r_limiter_index,midRange,psiC_s,psiS_s):
 
 	
 def calcAlpha(r,djdr,q):
-	# note that alpha[0]=+inf if r[0]==0
 	return m**2/r+mu0*R/float(BT)*djdr/(1/q-float(n)/m)
 
 def calcGamma1(r):
 	dr=r[1]-r[0]
 	return (1/(2*dr)+r/dr**2)
 def calcGamma0(r,djdr,q):
-	# note that gamma0[0] = -inf because alpha[0]=+inf
 	alpha=calcAlpha(r,djdr,q)
 	dr=r[1]-r[0]
 	return -2*r/dr**2-alpha
@@ -434,20 +439,33 @@ class animatePlot(object):
 nPoints=1000 +1    	# number of radial grid points
 dt=1e-5	          	# time step [seconds]
 
-J0=200#200	          	# sourced current amplitude [Amps].  (Not for feedback)
+J0=20#200	          	# sourced current amplitude [Amps].  (Not for feedback)
 fbGain=20          	# feedback gain absolute value  (feedback only)
+
+psiC_s_guess=2e-4  	# guess at \Psi_C initial value at resonant surface
+psiS_s_guess=1e-4  	# guess at \Psi_S initial value at resonant surface
 
 # uncomment one of the following operating modes
 #operatingMode="step"
-#operatingMode="feedforward"
+operatingMode="feedforward"
 #operatingMode="feedback_suppression"
-operatingMode="feedback_amplification"
+#operatingMode="feedback_amplification"
 #operatingMode="custom"
-#operatingMode="noCurrent"
 
-# uncomment machine 
-machine='T10'
-#machine='HBT'
+
+## machine constants
+m=2
+n=1
+R=1.5
+BT=2.5
+iP=250e3
+Omega=1e3*2*np.pi
+omegaR=1/0.01 # multiplying by 2*pi seems to break the code.  Therefore, leave it as is.  
+k=np.pi
+r_wall=.39
+r_limiter=0.27
+q_offset=0.7/.85 #q_offset and q_limiter appear to have very little to do with actual q values in the q profile....
+q_limiter=2.4
 
 ## physical constants
 mu0=4*np.pi*1e-7
@@ -456,44 +474,6 @@ mu0=4*np.pi*1e-7
 ########################################
 ### main code
 
-## machine constants
-if machine=='T10':
-	m=2
-	n=1
-	R=1.5
-	BT=2.5
-	iP=250e3
-	Omega=1e3*2*np.pi # mode frequency
-	omegaR=1/0.01 # default 1/.01. Note that 1/.1 results in 5 gauss modes
-	k=np.pi
-	r_wall=.39
-	r_limiter=0.27
-	q_offset=0.7/.85 #q_offset and q_limiter appear to have very little to do with actual q values in the q profile....
-	q_limiter=2.4
-	
-	psiC_s_guess=2e-4  	# guess at \Psi_C initial value at resonant surface
-	psiS_s_guess=1e-4  	# guess at \Psi_S initial value at resonant surface
-
-elif machine=='HBT':
-	m=2
-	n=1
-	R=.92
-	BT=.35
-	iP=10e3
-	Omega=8e3*2*np.pi # mode frequency
-	omegaR=1/.001
-	k=np.pi
-	r_wall=.16
-	r_limiter=0.15
-	q_offset=.9 #q_offset and q_limiter appear to have very little to do with actual q values in the q profile....
-	q_limiter=3
-
-	
-	psiC_s_guess=2e-5  	# guess at \Psi_C initial value at resonant surface
-	psiS_s_guess=1e-5  	# guess at \Psi_S initial value at resonant surface
-	dt=.1e-5
-	
-
 # create radial domain
 r=np.linspace(0,r_wall,nPoints)
 dr=r[1]-r[0]
@@ -501,8 +481,6 @@ dr=r[1]-r[0]
 # create time domain
 if operatingMode=="step":
 	tStop=30e-3
-elif operatingMode=="noCurrent":
-	tStop=35e-3
 elif operatingMode=="feedforward":
 	tStop=55e-3
 elif operatingMode=="feedback_suppression" or operatingMode=="feedback_amplification":
@@ -546,10 +524,6 @@ elif operatingMode=="feedback_suppression" or operatingMode=="feedback_amplifica
 	timeFeedbackOn=15e-3
 	timeFeedbackOff=30e-3
 elif operatingMode=="custom":
-	index=np.where(t>t[-1]/2)[0]
-	J[index]=J0*np.cos(2*np.pi*0.5e3*t[index]+np.pi)
-	feedback=False
-elif operatingMode=="noCurrent":
 #	index=np.where(t>t[-1]/2)[0]
 #	J[index]=J0*np.cos(2*np.pi*0.5e3*t[index]+np.pi)
 	feedback=False
@@ -613,14 +587,10 @@ timerRef=time.time()
 domainChange=np.zeros(len(t),dtype=bool)
 
 # main loop
-iStop=len(t) 
-for i in range(0,iStop):#len(t)):
-#	print i
+for i in range(0,len(t)):#len(t)):
 	
 	# update island width
 	W[i]=width(r_surf,dmudr_surf,psiC_s[i],psiS_s[i])
-	
-#	break
 	
 	# break up domain into inner (r<r_surface-W/2), outer (r>r_surface+W/2), and
 	# middle (r_surface-W/2 <= r <= r_surface+W/2)
@@ -628,12 +598,7 @@ for i in range(0,iStop):#len(t)):
 		midRange=[]
 	(inRange,midRange,outRange,domainChange[i])=findDomainRanges(r,r_surf_index,W[i],midRange)
   
-    
 	 
-#	print len(midRange)
-#	
-#	break
-
 	if feedback==True:
 		if t[i]>timeFeedbackOn and t[i]<timeFeedbackOff:
 			J[i]=fbGain*(BS[i-1]-BS[i-2])/dt # backward euler derivative of B_S
@@ -659,19 +624,13 @@ for i in range(0,iStop):#len(t)):
 	BS[i]=(PsiS[outRange[-1],i]-PsiS[outRange[-2],i])/dr
 	
 	# solve for \Delta'
-#	deltaP_C=(-(PsiC[midRange[0]-1,i]-PsiC[midRange[0]-2,i])/dr+(PsiC[midRange[-1]+2,i]-PsiC[midRange[-1]+1,i])/dr)/psiC_s[i]
-#	deltaP_S=(-(PsiS[midRange[0]-1,i]-PsiS[midRange[0]-2,i])/dr+(PsiS[midRange[-1]+2,i]-PsiS[midRange[-1]+1,i])/dr)/psiS_s[i]
-	deltaP_C=(-(PsiC[midRange[0]-1,i]-PsiC[midRange[0]-2,i])/dr+(PsiC[midRange[-1]+2,i]-PsiC[midRange[-1]+1,i])/dr)
-	deltaP_S=(-(PsiS[midRange[0]-1,i]-PsiS[midRange[0]-2,i])/dr+(PsiS[midRange[-1]+2,i]-PsiS[midRange[-1]+1,i])/dr)
+	deltaP_C=(-(PsiC[midRange[0]-1,i]-PsiC[midRange[0]-2,i])/dr+(PsiC[midRange[-1]+2,i]-PsiC[midRange[-1]+1,i])/dr)/psiC_s[i]
+	deltaP_S=(-(PsiS[midRange[0]-1,i]-PsiS[midRange[0]-2,i])/dr+(PsiS[midRange[-1]+2,i]-PsiS[midRange[-1]+1,i])/dr)/psiS_s[i]
 	
 	# evolve in time - forward Euler
 	if i < len(t)-1:
-#		psiC_s[i+1]=psiC_s[i]*(1+zeta*deltaP_C/W[i])-eta*psiS_s[i]
-#		psiS_s[i+1]=psiS_s[i]*(1+zeta*deltaP_S/W[i])+eta*psiC_s[i]
-#		print(zeta*deltaP_C/W[i])
-#		print(-eta*psiS_s[i])
-		psiC_s[i+1]=psiC_s[i]+zeta*deltaP_C/W[i]-eta*psiS_s[i]
-		psiS_s[i+1]=psiS_s[i]+zeta*deltaP_S/W[i]+eta*psiC_s[i]
+		psiC_s[i+1]=psiC_s[i]*(1+zeta*deltaP_C/W[i])-eta*psiS_s[i]
+		psiS_s[i+1]=psiS_s[i]*(1+zeta*deltaP_S/W[i])+eta*psiC_s[i]
 
 	# print progress
 	if (time.time()-timerRef)>10: # print status after every 10 seconds
@@ -685,11 +644,12 @@ for i in range(0,iStop):#len(t)):
 
 # plot initial conditions
 #plotInitialConditions(y2Axis=True)
-#plotInitialConditions(y2Axis=False)
+plotInitialConditions(y2Axis=False)
 
 # plot final state
 #plotFinalState(0.15e-2,t[-1],title)
-plotFinalState()
+plotFinalState(title=title)
+
 
 # display the percentage of times that the A matrices needed to be recreated
 temp=np.average(domainChange)*1e2
@@ -702,25 +662,3 @@ if False:
 	a = animatePlot()
 	a.show()
 	a.saveAsGif('animation.gif')
-
-
-psiFrame(iStop-1)
-#plotFinalState()
-print(psiC_s[0])
-print(psiS_s[0])
-print(psiC_s[1])
-print(psiS_s[1])
-
-BC_dim=BC
-BS_dim=BS
-
-#print(W[0])
-#
-#alpha_dim=calcAlpha(r,djdr,q); alpha_dim[0]=0
-
-#
-#plt.close('all')
-#plt.figure()
-##plt.plot(alpha_dim)
-##plt.plot(alpha_nondim/r0)
-#plt.plot(1/q-float(n)/m)

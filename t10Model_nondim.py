@@ -28,7 +28,8 @@ def findDomainRanges(r,r_surf_index,W,oldMiddleRange):
 	"""
 	Because the islands grow and shrink, the location of the boundaries are in 
 	constant flux.  This code figures out the boundaries and returns the 
-	indices associates with all three regions.  
+	indices associates with all three regions.  It also returns a boolean 
+	corresponding to if any of the three regions changed in size
 	"""
 	
 	innerBCIndex=findNearest(r,r[r_surf_index]-W/2)
@@ -141,41 +142,40 @@ def findNearest(array,value):
 	
 ## misc parameter calculations
 	
-def calcBeta(r,Jr,r_limiter,r_limiter_index,midRange,psiC_s,psiS_s):
-	mu0=4*np.pi*1e-7
-	dr=r[1]-r[0]
+def calcBeta(rho,Gamma,rho_limiter,rho_limiter_index,midRange,chiC,chiS):
+#	mu0=4*np.pi*1e-7
+	drho=rho[1]-rho[0]
 	
 	betaC=np.zeros(len(r))
 	betaS=np.zeros(len(r))
 	
 	# add current source term
-	iota=m*Jr/2/r_limiter/dr
-	betaC[r_limiter_index]=-iota*mu0*r_limiter
+	# note that the discretized delta function requires dividing by drho
+	betaC[rho_limiter_index]=-rho_limiter*Gamma/drho
 
 	# impose boundary conditions
 	betaC[0]=0
 	betaC[-1]=0
-	betaC[midRange[0]-1]=psiC_s
-	betaC[midRange]=psiC_s
-	betaC[midRange[-1]+1]=psiC_s
+	betaC[midRange[0]-1]=chiC*psi1/psi0
+	betaC[midRange]=chiC*psi1/psi0
+	betaC[midRange[-1]+1]=chiC*psi1/psi0
 	betaS[0]=0
 	betaS[-1]=0
-	betaS[midRange[0]-1]=psiS_s
-	betaS[midRange]=psiS_s
-	betaS[midRange[-1]+1]=psiS_s
+	betaS[midRange[0]-1]=chiS*psi1/psi0
+	betaS[midRange]=chiS*psi1/psi0
+	betaS[midRange[-1]+1]=chiS*psi1/psi0
 	
 	return (betaC,betaS)
 
 	
 def calcAlpha(r,djdr,q):
-	# note that alpha[0]=+inf if r[0]==0
+	
 	return m**2/r+mu0*R/float(BT)*djdr/(1/q-float(n)/m)
 
 def calcGamma1(r):
 	dr=r[1]-r[0]
 	return (1/(2*dr)+r/dr**2)
 def calcGamma0(r,djdr,q):
-	# note that gamma0[0] = -inf because alpha[0]=+inf
 	alpha=calcAlpha(r,djdr,q)
 	dr=r[1]-r[0]
 	return -2*r/dr**2-alpha
@@ -183,14 +183,6 @@ def calcGammaM1(r):
 	dr=r[1]-r[0]
 	return (-1/(2*dr)+r/dr**2)
 	
-def width(r_surf,dmudr_surf,psiC_s,psiS_s):
-	return 4*np.sqrt(np.sqrt(psiC_s**2+psiS_s**2)/(-r_surf*BT*dmudr_surf/R))
-
-def calcDeltaPrime(dr,psiA,psiB):
-	dPsiA=(psiA[-1]-psiA[-2])/dr 
-	dPsiB=(psiB[1]-psiB[0])/dr 
-	return (dPsiB-dPsiA)/psiB[0]
-
 def createA(r,gamma1,gamma0,gammaM1):
 	# calculate A matrix
 	A=createTriDiag(gamma1,gamma0,gammaM1)
@@ -300,7 +292,7 @@ def plotInitialConditions(y2Axis=False):
 	# plot j(r) 
 	f,axx = plt.subplots(2,sharex=True)
 	ax=axx[0]
-	p1=ax.plot(r,j,'k',label='current profile')
+	p1=ax.plot(rho*r0,j,'k',label='current profile')
 	#ax.set_xlabel('minor radius (m)')
 	ax.set_ylabel(r'current density (A/m$^2$)')
 	ylim=ax.get_ylim()
@@ -313,7 +305,7 @@ def plotInitialConditions(y2Axis=False):
 	# optional  dj(r)/dr plot  
 	if y2Axis==True:
 		ax2=ax.twinx()
-		p2=ax2.plot(r,djdr,'r',label='current profile derivative')
+		p2=ax2.plot(rho*r0,djdrho/r0,'r',label='current profile derivative')
 		ax2.set_ylabel(r'current density derivative (A/m$^3$)',color='r')
 		lns = p1+p2+p3+p4+p5
 	else:
@@ -324,7 +316,7 @@ def plotInitialConditions(y2Axis=False):
 	
 	# plot q(r) 
 	ax=axx[1]
-	p1=ax.plot(r,q,'k',label='q(r)')
+	p1=ax.plot(rho*r0,q,'k',label='q(r)')
 	ax.set_xlabel('minor radius (m)')
 	ax.set_ylabel(r'q')
 	ylim=ax.get_ylim()
@@ -335,7 +327,7 @@ def plotInitialConditions(y2Axis=False):
 	#ax.legend()
 	if y2Axis==True: # opertional, also plot deriv of 1/q
 		ax2=ax.twinx()
-		p2=ax2.plot(r,dmudr,'r',label=r'$\frac{\partial (1/q)}{\partial r}$')
+		p2=ax2.plot(rho*r0,dmudrho/r0,'r',label=r'$\frac{\partial (1/q)}{\partial r}$')
 		ax2.set_ylabel(r'$\frac{\partial (1/q)}{\partial r}$',color='r')
 		lns = p1+p2+p3+p4+p5
 	else:
@@ -351,27 +343,28 @@ def plotFinalState(tStart=None,tStop=None,title=''):
 	iStart=findNearest(t,tStart)
 	iStop=findNearest(t,tStop)
 	f, axarr = plt.subplots(3, sharex=True)
-	axarr[1].plot(t[iStart:iStop+1],BC[iStart:iStop+1]*1e4,'r',label=r'B$_C(r_{wall})$')
-	axarr[1].plot(t[iStart:iStop+1],BS[iStart:iStop+1]*1e4,'b',label=r'B$_S(r_{wall})$')
+	axarr[1].plot(t0*tau[iStart:iStop+1],BC[iStart:iStop+1]*1e4,'r',label=r'B$_C(r_{wall})$')
+	axarr[1].plot(t0*tau[iStart:iStop+1],BS[iStart:iStop+1]*1e4,'b',label=r'B$_S(r_{wall})$')
 	axarr[1].set_ylabel('Gauss')
 	axarr[1].legend()
-	axarr[2].plot(t[iStart:iStop+1],W[iStart:iStop+1],'r',label='island width')
+	axarr[2].plot(t0*tau[iStart:iStop+1],W[iStart:iStop+1]*W0,'r',label='island width')
 	axarr[2].set_ylabel('m')
 	axarr[2].legend()
-	axarr[0].plot(t[iStart:iStop+1],J[iStart:iStop+1],label='Sourced Current')
+	axarr[0].plot(t0*tau[iStart:iStop+1],Gamma[iStart:iStop+1],label='Sourced Current')
 	axarr[0].set_xlabel('Time (s)')
 	axarr[0].set_ylabel('A')
 	axarr[0].legend()
-	axarr[2].set_xlim([0,tStop])
+	axarr[2].set_xlim([t0*tau[iStart],t0*tau[iStop]])
 	axarr[0].set_title(title)
 
 def psiFrame(i):
+#	psi0=psi1
 	fig,ax = plt.subplots()
 	ax2=ax.twinx()  
-	p1=ax.plot(r,PsiC[:,i],label=r'$\psi_C$')
-	p2=ax.plot(r,PsiS[:,i],'--',label=r'$\psi_S$')
-	p3=ax2.plot(r[inRange],betaC[inRange,i],'r',label=r'$\beta_C$')   
-	ax2.plot(r[outRange],betaC[outRange,i],'r')   
+	p1=ax.plot(rho,phiC[:,i]*psi0,label=r'$\psi_C$')
+	p2=ax.plot(rho,phiS[:,i]*psi0,'--',label=r'$\psi_S$')
+	p3=ax2.plot(rho[inRange],betaC[inRange,i]*psi0,'r',label=r'$\beta_C$')   
+	ax2.plot(rho[outRange],betaC[outRange,i]*psi0,'r')   
 	lns = p1+p2+p3
 	labs = [count.get_label() for count in lns]
 	ax.legend(lns, labs)
@@ -392,9 +385,9 @@ class animatePlot(object):
 		
 		# initialize
 		i=0
-		self.p1=self.ax.plot(r,PsiC[:,i],label=r'$\Psi_C$') #,animated=True
-		self.p2=self.ax.plot(r,PsiS[:,i],'--',label=r'$\Psi_S$')
-		self.p3=self.ax2.plot(r,betaC[:,i],'r',label=r'$\beta_C$') 
+		self.p1=self.ax.plot(rho,phiC[:,i]*psi0,label=r'$\Psi_C$') #,animated=True
+		self.p2=self.ax.plot(rho,phiS[:,i]*psi0,'--',label=r'$\Psi_S$')
+		self.p3=self.ax2.plot(rho,betaC[:,i]*psi0,'r',label=r'$\beta_C$') 
 		lns = self.p1+self.p2+self.p3
 		labs = [count.get_label() for count in lns]
 		self.ax.legend(lns, labs)
@@ -410,10 +403,10 @@ class animatePlot(object):
 	def _update(self, i):
 		"""Update the plot."""
 		
-		self.p1[0].set_ydata(PsiC[:,i])
-		self.p2[0].set_ydata(PsiS[:,i])
+		self.p1[0].set_ydata(phiC[:,i]*psi0)
+		self.p2[0].set_ydata(phiS[:,i]*psi0)
 #		self.p3[0].set_xdata(r[inRange])
-		self.p3[0].set_ydata(betaC[:,i])
+		self.p3[0].set_ydata(betaC[:,i]*psi0)
 #		self.p3[0].set_ydata(betaC[inRange,i])
 #		self.p4[0].set_xdata(r[outRange])
 #		self.p4[0].set_ydata(betaC[outRange,i])
@@ -494,9 +487,19 @@ elif machine=='HBT':
 	dt=.1e-5
 	
 
+# variable/parameter non-dimensional constants (the remaining terms are defined later)
+r0=r_limiter
+J1=1
+psi0=mu0*J1*m/2
+t0=1./Omega
+
 # create radial domain
 r=np.linspace(0,r_wall,nPoints)
 dr=r[1]-r[0]
+
+# create non-dim radial domain
+rho=r/r0
+drho=rho[1]-rho[0]
 
 # create time domain
 if operatingMode=="step":
@@ -511,9 +514,9 @@ elif operatingMode=="custom":
 	tStop=35e-3
 t=np.arange(0,tStop+dt,dt)
 
-# derived constants
-zeta=dt*k*r_limiter**2*omegaR
-eta=dt*Omega
+# create non-dim time domain
+tau=t/t0
+dTau=tau[1]-tau[0]
 
 # create figure title
 title=operatingMode+'. N=%d. dt=%1.1e.'%(nPoints,dt) 
@@ -556,34 +559,53 @@ elif operatingMode=="noCurrent":
 else:
 	print('No valid operating mode provided.  Stopping code.')
 	raise SystemExit
+	
+# create non-dim current
+Gamma=J/J1
 
 # current profile and derivative profile
 l=q_limiter/q_offset-1
 j=calcCurrentProfileFromIP(r,r_limiter=r_limiter,iP=iP,
 						   radialFunction=wessonCurrentModel, 
 						   params=[1,r_limiter,l],j0Guess=2783578.873)
-djdr=firstOrderCenterDiff(r,j)
+#djdr=firstOrderCenterDiff(r,j)
+djdrho=firstOrderCenterDiff(rho,j)
 
 # create q profile
 #q=quadraticQProfile(r,q0=q_offset,r1=r_limiter,q1=q_limiter)
 q=cylindricalQApproximation(r,r_limiter,l)
 
 # calculate gamma terms
-gamma1=calcGamma1(r)
-gamma0=calcGamma0(r,djdr,q)
-gammaM1=calcGammaM1(r)
+gamma1=calcGamma1(rho)
+gamma0=calcGamma0(rho,djdrho,q)
+if rho[0]==0:
+	gamma0[0]=gamma0[1]
+gammaM1=calcGammaM1(rho)
+
 
 # find rational surface
 r_surf_index=findNearest(q,float(m)/float(n))
+rho_surf_index=int(1)*r_surf_index
 r_surf=r[r_surf_index]
+rho_surf=rho[r_surf_index]
 
-# find limiter 
+# limiter location and index
+rho_limiter=r_limiter/r0
 r_limiter_index=findNearest(r,r_limiter)
+rho_limiter_index=findNearest(rho,rho_limiter)
 
 # calculate mu, its radial derivative, and its value at the mode surface
 #mu=1/q
-dmudr=firstOrderCenterDiff(r,1./q)
-dmudr_surf=dmudr[r_surf_index]
+#dmudr=firstOrderCenterDiff(r,1./q)
+dmudrho=firstOrderCenterDiff(rho,1./q)
+#dmudr_surf=dmudr[rho_surf_index]
+dmudrho_surf=dmudrho[rho_surf_index]
+
+# psi1
+psi1=(-psi0**2 * t0**2 * k**2 * r_limiter**2 * omegaR**2 * rho_surf * BT * dmudrho_surf / (16*R))	**(1./3.)
+
+# W0
+W0=np.sqrt(- 16 * R * psi1 / (rho_surf * BT * dmudrho_surf))
 
 # initialize beta
 betaC=np.zeros((len(r),len(t)))
@@ -597,14 +619,14 @@ BC=np.zeros(len(t))
 BS=np.zeros(len(t))
 
 # initialize PsiC and PsiS
-PsiC=np.zeros((len(r),len(t)))
-PsiS=np.zeros((len(r),len(t)))
+phiC=np.zeros((len(rho),len(tau)))
+phiS=np.zeros((len(rho),len(tau)))
 
 # initialize PsiC and PsiS at the surface
-psiC_s=np.zeros(len(t))
-psiC_s[0]=psiC_s_guess
-psiS_s=np.zeros(len(t))
-psiS_s[0]=psiS_s_guess
+chiC=np.zeros(len(tau))
+chiC[0]=psiC_s_guess/psi1
+chiS=np.zeros(len(tau))
+chiS[0]=psiS_s_guess/psi1
 
 # set reference timer
 timerRef=time.time()
@@ -613,83 +635,68 @@ timerRef=time.time()
 domainChange=np.zeros(len(t),dtype=bool)
 
 # main loop
-iStop=len(t) 
+iStop=len(t)
 for i in range(0,iStop):#len(t)):
 #	print i
 	
-	# update island width
-	W[i]=width(r_surf,dmudr_surf,psiC_s[i],psiS_s[i])
-	
-#	break
+	# update non-dim island width
+	W[i]=(chiC[i]**2+chiS[i]**2)**(0.25)
 	
 	# break up domain into inner (r<r_surface-W/2), outer (r>r_surface+W/2), and
 	# middle (r_surface-W/2 <= r <= r_surface+W/2)
 	if i == 0:
 		midRange=[]
-	(inRange,midRange,outRange,domainChange[i])=findDomainRanges(r,r_surf_index,W[i],midRange)
+  	(inRange,midRange,outRange,domainChange[i])=findDomainRanges(rho,rho_surf_index,W[i]*W0/r0,midRange)
   
-    
-	 
+  
 #	print len(midRange)
-#	
-#	break
-
 	if feedback==True:
 		if t[i]>timeFeedbackOn and t[i]<timeFeedbackOff:
-			J[i]=fbGain*(BS[i-1]-BS[i-2])/dt # backward euler derivative of B_S
+			Gamma[i]=fbGain*(BS[i-1]-BS[i-2])/dTau/J1/t0 # backward euler derivative of B_S
 		
-	# update betas
-	(betaC[:,i],betaS[:,i])=calcBeta(r,J[i],r_limiter,r_limiter_index,midRange,psiC_s[i],psiS_s[i])
+	# update RHS (beta) terms
+	(betaC[:,i],betaS[:,i])=calcBeta(rho,Gamma[i],rho_limiter,rho_limiter_index,midRange,chiC[i],chiS[i])
+	
 	
 	# create matrices
 	if domainChange[i]:
-		AInner=createA(r[inRange],gamma1[inRange],gamma0[inRange],gammaM1[inRange])
-		AOuter=createA(r[outRange],gamma1[outRange],gamma0[outRange],gammaM1[outRange])
+		AInner=createA(rho[inRange],gamma1[inRange],gamma0[inRange],gammaM1[inRange])
+		AOuter=createA(rho[outRange],gamma1[outRange],gamma0[outRange],gammaM1[outRange])
 
 	# solve BVP
-	PsiC[inRange,i]=linalg.spsolve(AInner,betaC[inRange,i])
-	PsiS[inRange,i]=linalg.spsolve(AInner,betaS[inRange,i])
-	PsiC[outRange,i]=linalg.spsolve(AOuter,betaC[outRange,i])
-	PsiS[outRange,i]=linalg.spsolve(AOuter,betaS[outRange,i])
-	PsiC[midRange,i]=psiC_s[i]
-	PsiS[midRange,i]=psiS_s[i]
+	phiC[inRange,i]=linalg.spsolve(AInner,betaC[inRange,i])
+	phiS[inRange,i]=linalg.spsolve(AInner,betaS[inRange,i])
+	phiC[outRange,i]=linalg.spsolve(AOuter,betaC[outRange,i])
+	phiS[outRange,i]=linalg.spsolve(AOuter,betaS[outRange,i])
+	phiC[midRange,i]=chiC[i]*psi1/psi0
+	phiS[midRange,i]=chiS[i]*psi1/psi0
 	
 	# solve for field at r=b
-	BC[i]=(PsiC[outRange[-1],i]-PsiC[outRange[-2],i])/dr
-	BS[i]=(PsiS[outRange[-1],i]-PsiS[outRange[-2],i])/dr
+	BC[i]=psi0/r0*(phiC[outRange[-1],i]-phiC[outRange[-2],i])/drho
+	BS[i]=psi0/r0*(phiS[outRange[-1],i]-phiS[outRange[-2],i])/drho
 	
 	# solve for \Delta'
-#	deltaP_C=(-(PsiC[midRange[0]-1,i]-PsiC[midRange[0]-2,i])/dr+(PsiC[midRange[-1]+2,i]-PsiC[midRange[-1]+1,i])/dr)/psiC_s[i]
-#	deltaP_S=(-(PsiS[midRange[0]-1,i]-PsiS[midRange[0]-2,i])/dr+(PsiS[midRange[-1]+2,i]-PsiS[midRange[-1]+1,i])/dr)/psiS_s[i]
-	deltaP_C=(-(PsiC[midRange[0]-1,i]-PsiC[midRange[0]-2,i])/dr+(PsiC[midRange[-1]+2,i]-PsiC[midRange[-1]+1,i])/dr)
-	deltaP_S=(-(PsiS[midRange[0]-1,i]-PsiS[midRange[0]-2,i])/dr+(PsiS[midRange[-1]+2,i]-PsiS[midRange[-1]+1,i])/dr)
-	
+	deltaP_C_nondim=((phiC[midRange[-1]+2,i]-phiC[midRange[-1]+1,i])/drho-(phiC[midRange[0]-1,i]-phiC[midRange[0]-2,i])/drho)
+	deltaP_S_nondim=((phiS[midRange[-1]+2,i]-phiS[midRange[-1]+1,i])/drho-(phiS[midRange[0]-1,i]-phiS[midRange[0]-2,i])/drho)
+
 	# evolve in time - forward Euler
-	if i < len(t)-1:
-#		psiC_s[i+1]=psiC_s[i]*(1+zeta*deltaP_C/W[i])-eta*psiS_s[i]
-#		psiS_s[i+1]=psiS_s[i]*(1+zeta*deltaP_S/W[i])+eta*psiC_s[i]
-#		print(zeta*deltaP_C/W[i])
-#		print(-eta*psiS_s[i])
-		psiC_s[i+1]=psiC_s[i]+zeta*deltaP_C/W[i]-eta*psiS_s[i]
-		psiS_s[i+1]=psiS_s[i]+zeta*deltaP_S/W[i]+eta*psiC_s[i]
+	if i < len(tau)-1:
+		chiC[i+1]=chiC[i]+ dTau*( deltaP_C_nondim/W[i] - chiS[i])
+		chiS[i+1]=chiS[i]+ dTau*( deltaP_S_nondim/W[i] + chiC[i])
 
 	# print progress
 	if (time.time()-timerRef)>10: # print status after every 10 seconds
 		print("step=%d/%d, \t time=%.6f" % (i,len(t),t[i]))
 		timerRef=time.time()
 		
-	# plot PsiC and PsiS
-#	if np.mod(i,400000)==0:
-#		psiFrame(i)
-
 
 # plot initial conditions
 #plotInitialConditions(y2Axis=True)
-#plotInitialConditions(y2Axis=False)
+plotInitialConditions(y2Axis=False)
 
 # plot final state
-#plotFinalState(0.15e-2,t[-1],title)
-plotFinalState()
+plotFinalState(0.15e-2,t[-1],title)
+#plotFinalState()
 
 # display the percentage of times that the A matrices needed to be recreated
 temp=np.average(domainChange)*1e2
@@ -703,24 +710,3 @@ if False:
 	a.show()
 	a.saveAsGif('animation.gif')
 
-
-psiFrame(iStop-1)
-#plotFinalState()
-print(psiC_s[0])
-print(psiS_s[0])
-print(psiC_s[1])
-print(psiS_s[1])
-
-BC_dim=BC
-BS_dim=BS
-
-#print(W[0])
-#
-#alpha_dim=calcAlpha(r,djdr,q); alpha_dim[0]=0
-
-#
-#plt.close('all')
-#plt.figure()
-##plt.plot(alpha_dim)
-##plt.plot(alpha_nondim/r0)
-#plt.plot(1/q-float(n)/m)
