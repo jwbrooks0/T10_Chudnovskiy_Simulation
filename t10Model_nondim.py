@@ -52,7 +52,7 @@ def findDomainRanges(r,r_surf_index,W,oldMiddleRange):
 	return (innerIndexRange,middleIndexRange,outerIndexRange,domainChange)
 		
 
-def calcCurrentProfileFromIP(r,r_limiter,radialFunction,params,iP,j0GuessLeft=1e5,j0GuessRight=1e7,j0Guess=1e6,errorTol=1e-6):
+def calcCurrentProfileFromIP(r,r_limiter,radialFunction,params,iP,j0GuessLeft=1e5,j0GuessRight=1e7,j0Guess=1e6,errorTol=1e-6,verbose=False):
 	"""
 	The references only provide I_P and do not provide j(r=0).  This 
 	subfunction makes a guess at j(0) and calculates j(r) with the provided
@@ -93,7 +93,8 @@ def calcCurrentProfileFromIP(r,r_limiter,radialFunction,params,iP,j0GuessLeft=1e
 	error=(ITotal-iP)/iP
 	
 	count=0
-	print('Starting iterative solver to calculated current density given the plasma current')
+	if verbose==True:
+		print('Starting iterative solver to calculated current density given the plasma current')
 	while(np.abs(error)>errorTol):
 		count+=1
 	
@@ -108,7 +109,8 @@ def calcCurrentProfileFromIP(r,r_limiter,radialFunction,params,iP,j0GuessLeft=1e
 		
 		ITotal=firstOrderIntegration(r,j*r)*2*np.pi
 		error=(ITotal-iP)/iP
-		print('count: %d, \t error: %.6f \t guess: %.3f, \t I: %.1f' % (count,error,j0Guess,ITotal))
+		if verbose==True:
+			print('count: %d, \t error: %.6f \t guess: %.3f, \t I: %.1f' % (count,error,j0Guess,ITotal))
 
 	return j
 	
@@ -168,20 +170,20 @@ def calcBeta(rho,Gamma,rho_limiter,rho_limiter_index,midRange,chiC,chiS):
 	return (betaC,betaS)
 
 	
-def calcAlpha(r,djdr,q):
-	
-	return m**2/r+mu0*R/float(BT)*djdr/(1/q-float(n)/m)
+#def calcAlpha(r,djdr,q):
+#	
+#	return m**2/r+mu0*R/float(BT)*djdr/(1/q-float(n)/m)
 
-def calcGamma1(r):
-	dr=r[1]-r[0]
-	return (1/(2*dr)+r/dr**2)
-def calcGamma0(r,djdr,q):
-	alpha=calcAlpha(r,djdr,q)
-	dr=r[1]-r[0]
-	return -2*r/dr**2-alpha
-def calcGammaM1(r):
-	dr=r[1]-r[0]
-	return (-1/(2*dr)+r/dr**2)
+#def calcGamma1(r):
+#	dr=r[1]-r[0]
+#	return (1/(2*dr)+r/dr**2)
+#def calcGamma0(r,djdr,q):
+#	alpha=calcAlpha(r,djdr,q)
+#	dr=r[1]-r[0]
+#	return -2*r/dr**2-alpha
+#def calcGammaM1(r):
+#	dr=r[1]-r[0]
+#	return (-1/(2*dr)+r/dr**2)
 	
 def createA(r,gamma1,gamma0,gammaM1):
 	# calculate A matrix
@@ -575,23 +577,21 @@ djdrho=firstOrderCenterDiff(rho,j)
 #q=quadraticQProfile(r,q0=q_offset,r1=r_limiter,q1=q_limiter)
 q=cylindricalQApproximation(r,r_limiter,l)
 
-# calculate gamma terms
-gamma1=calcGamma1(rho)
-gamma0=calcGamma0(rho,djdrho,q)
+# calculate matrix bands (diagonal terms)
+gamma1=(1./(2*drho)+rho/drho**2)#calcGamma1(rho)
+gamma0= -2.*rho/drho**2-m**2/rho-mu0*R/float(BT)*djdrho/(1/q-float(n)/m)#calcGamma0(rho,djdrho,q)
 if rho[0]==0:
 	gamma0[0]=gamma0[1]
-gammaM1=calcGammaM1(rho)
-
+gammaM1=(-1./(2*drho)+rho/drho**2)#calcGammaM1(rho)
 
 # find rational surface
-r_surf_index=findNearest(q,float(m)/float(n))
-rho_surf_index=int(1)*r_surf_index
-r_surf=r[r_surf_index]
-rho_surf=rho[r_surf_index]
+rho_surf_index=findNearest(q,float(m)/n)
+r_surf=r[rho_surf_index]
+rho_surf=rho[rho_surf_index]
 
 # limiter location and index
 rho_limiter=r_limiter/r0
-r_limiter_index=findNearest(r,r_limiter)
+#r_limiter_index=findNearest(r,r_limiter)
 rho_limiter_index=findNearest(rho,rho_limiter)
 
 # calculate mu, its radial derivative, and its value at the mode surface
@@ -635,8 +635,8 @@ timerRef=time.time()
 domainChange=np.zeros(len(t),dtype=bool)
 
 # main loop
-iStop=len(t)
-for i in range(0,iStop):#len(t)):
+#iStop=len(t)
+for i in range(0,len(t)):#len(t)):
 #	print i
 	
 	# update non-dim island width
@@ -648,15 +648,13 @@ for i in range(0,iStop):#len(t)):
 		midRange=[]
   	(inRange,midRange,outRange,domainChange[i])=findDomainRanges(rho,rho_surf_index,W[i]*W0/r0,midRange)
   
-  
-#	print len(midRange)
+	# optional feedback
 	if feedback==True:
 		if t[i]>timeFeedbackOn and t[i]<timeFeedbackOff:
 			Gamma[i]=fbGain*(BS[i-1]-BS[i-2])/dTau/J1/t0 # backward euler derivative of B_S
 		
 	# update RHS (beta) terms
 	(betaC[:,i],betaS[:,i])=calcBeta(rho,Gamma[i],rho_limiter,rho_limiter_index,midRange,chiC[i],chiS[i])
-	
 	
 	# create matrices
 	if domainChange[i]:

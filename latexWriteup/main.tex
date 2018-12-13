@@ -372,8 +372,8 @@ and other terms
 \begin{split}
 \delta(r-a) & = \delta(r_0 \rho - a) \\
 & = \delta\left(r_0(\rho-\frac{a}{r_0})\right)\\
-& = \frac{\delta^*\left(\rho-\frac{a}{r_0}\right)}{r_0}\\
-& = \frac{\delta^*\left(\rho-1\right)}{r_0}\\
+& = \frac{\delta\left(\rho-\frac{a}{r_0}\right)}{r_0}\\
+& = \frac{\delta\left(\rho-1\right)}{r_0}\\
 \end{split} 
 \end{equation} 
 where 
@@ -384,18 +384,29 @@ r_0 \equiv a
 \end{equation} 
 
 Also,
-\begin{equation} \label{wessonCurrentProfile}
+\begin{equation} \label{}
 \begin{split}
 \alpha&=\left( \frac{m^2}{r} +\frac{\mu_0 R}{B_T} \frac{\partial j}{\partial r}\frac{1}{\mu-n/m} \right) \\
-&=\left( \frac{m^2}{r_0 \rho} +\frac{\mu_0 R}{B_T r_0} \frac{\partial j}{\partial \rho}\frac{1}{\mu-n/m} \right) \\
-&=\frac{1}{r_0}\left( \frac{m^2}{ \rho} +\frac{\mu_0 R}{B_T} \frac{\partial j}{\partial \rho}\frac{1}{\mu-n/m} \right) \\
-&=\frac{\alpha^*}{r_0}
+&=\left( \frac{m^2}{r_0 \rho} +\frac{\mu_0 R j_0}{B_T r_0} \frac{\partial j^*}{\partial \rho}\frac{1}{\mu-n/m} \right) \\
+&=\frac{1}{r_0}\left( \frac{m^2}{ \rho} +\frac{\mu_0 R j_0}{B_T} \frac{\partial j^*}{\partial \rho}\frac{1}{\mu-n/m} \right) \\
+&=\frac{1}{r_0}\left( \frac{\alpha^*_1}{ \rho} +\frac{\partial j^*}{\partial \rho} \right) \\%&=\frac{\alpha^*}{r_0}
 \end{split} 
 \end{equation} 
 where
-\begin{equation} \label{wessonCurrentProfile}
+%\begin{equation} \label{wessonCurrentProfile}
+%\begin{split}
+%\alpha^*(\rho)& \equiv \left( \frac{m^2}{ \rho} +\frac{\mu_0 R}{B_T} \frac{\partial j}{\partial \rho}\frac{1}{\mu-n/m} \right) \\
+%\end{split} 
+%\end{equation} 
+\begin{equation} \label{}
 \begin{split}
-\alpha^*(\rho)& \equiv \left( \frac{m^2}{ \rho} +\frac{\mu_0 R}{B_T} \frac{\partial j}{\partial \rho}\frac{1}{\mu-n/m} \right) \\
+\alpha_1^* \equiv m^2
+\end{split} 
+\end{equation} 
+and
+\begin{equation} \label{}
+\begin{split}
+j_0 \equiv \left( \frac{B_T}{\mu_0 R} \frac{\partial j}{\partial \rho}\frac{1}{\mu-n/m} \right) \\
 \end{split} 
 \end{equation} 
 
@@ -404,9 +415,9 @@ Starting on the BVP, we get
 \begin{equation} \label{wessonCurrentProfile}
 \begin{split}
  \frac{\partial \Psi}{\partial r} +r   \frac{\partial^2 \Psi}{\partial r^2} - \alpha \Psi & = - \mu_0r  \frac{Jm}{2a} \delta (r-a)\\ 
- \frac{\Psi_0}{r_0} \frac{\partial \phi}{\partial \rho} + r_0 \rho \frac{\Psi_0}{r_0^2}   \frac{\partial^2 \phi}{\partial \rho^2} - \frac{\alpha^*}{r_0} \Psi_0 \phi & = - \mu_0 r_0 \rho \frac{J_1 \Gamma}{2a} \frac{\delta (\rho - 1)}{a}\\
-\frac{\partial \phi}{\partial \rho} + \rho   \frac{\partial^2 \phi}{\partial \rho^2} - \alpha^* \phi & = - \frac{\mu_0 \rho \Gamma J_1 m}{2 \Psi_0} \delta (\rho - 1)\\
-\frac{\partial \phi}{\partial \rho} + \rho   \frac{\partial^2 \phi}{\partial \rho^2} - \alpha^* \phi & = - \rho \Gamma \delta (\rho - 1)\\
+ \frac{\Psi_0}{r_0} \frac{\partial \phi}{\partial \rho} + r_0 \rho \frac{\Psi_0}{r_0^2}   \frac{\partial^2 \phi}{\partial \rho^2} - \frac{1}{r_0}\left( \frac{\alpha_1^*}{\rho}+\alpha_2^*\right) \Psi_0 \phi & = - \mu_0 r_0 \rho \frac{J_1 \Gamma}{2a} \frac{\delta (\rho - 1)}{a}\\
+\frac{\partial \phi}{\partial \rho} + \rho   \frac{\partial^2 \phi}{\partial \rho^2} - \left( \frac{\alpha_1^*}{\rho}+\alpha_2^*\right) \phi & = - \frac{\mu_0 \rho \Gamma J_1 m}{2 \Psi_0} \delta (\rho - 1)\\
+\frac{\partial \phi}{\partial \rho} + \rho   \frac{\partial^2 \phi}{\partial \rho^2} - \left( \frac{\alpha_1^*}{\rho}+\alpha_2^*\right)\phi & = - \rho \Gamma \delta (\rho - 1)\\
 \end{split} 
 \end{equation} 
 where

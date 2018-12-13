@@ -1,0 +1,3 @@
+[submodule "finiteDifferencingToolbox"]
+	path = finiteDifferencingToolbox
+	url = https://github.com/jwbrooks0/finiteDifferencingToolbox
