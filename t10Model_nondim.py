@@ -174,62 +174,23 @@ def calcBeta(rho,Gamma,rho_limiter,rho_limiter_index,midRange,chiC,chiS):
 	
 def createA(r,gamma1,gamma0,gammaM1):
 	# calculate A matrix
-	A=createTriDiag(gamma1,gamma0,gammaM1)
+	A=fdt.createDiagMatrix([gammaM1[1:],gamma0,gamma1[:-1]],[-1,0,1])
 	
 	A[0,0]=1							# enforces left BC
 	A[0,1]=0							# enforces left BC
 	A[-1,-1]=1						  # enforces right BC
 	A[-1,-2]=0						  # enforces right BC
 	
-#	return sparse.dia_matrix(A)
 	return sparse.csc_matrix(A) 
-#	return sparse.csr_matrix(A) 
-	
 	
 
-	
-	
-## finite differencing codes
-	
-#def firstOrderIntegration(x,y):
-#	dx=x[1]-x[0]
-#	return np.sum(dx*y)
-
-#def firstOrderCenterDiff(x,y):
-#	# 1st order center difference
-#	dx=x[1]-x[0]
-#	dydx=np.zeros(len(x))
-#	dydx[0]=(y[1]-y[0])/dx
-#	dydx[-1]=(y[-1]-y[-2])/dx
-#	for i in range(1,len(x)-1):
-#		dydx[i]=(y[i+1]-y[i-1])/(2*dx)
-#		
-#	return dydx
-	
-def createTriDiag(diag1,diag2,diag3):
-	# tri-diagonal matrix
-	A=np.zeros((len(diag1),len(diag1)))
-	A[0,0]=diag2[0];
-	A[0,1]=diag3[0];
-	for i in range(1,len(diag1)-1):
-		A[i,i-1]=diag1[i]
-		A[i,i  ]=diag2[i]
-		A[i,i+1]=diag3[i]
-	A[-1,-2]=diag1[-1]
-	A[-1,-1]=diag2[-1]
-	return A
-	
 	
 ## current profiles
 	
-	
 def wessonCurrentModel(r,params):
-	# 
 	# params = [1,0.27,3]
 	j0=params[0] # j(r=0)=j0
 	r0=params[1] # plasma edge (last closed flux surface)
-#	q_surf=params[2] # q value at dominant surface
-#	l=q_surf-1
 	l=params[2]
 	j=j0*(1-(r/r0)**2)**(l)
 	j[np.where(r>r0)]=0
@@ -249,6 +210,7 @@ def quadraticQProfile(r,q0,r1,q1):
 	q=c*r**2+q_offset
 	return q
 	
+
 def cylindricalQApproximation(r,r_limiter,l):
 	"""
 	Recommended in Ivanov's 2014 paper. 
@@ -266,6 +228,7 @@ def cylindricalQApproximation(r,r_limiter,l):
 		q[k]=2*np.pi*r[k]**2*BT/(R*mu0*iP)
 	return q
 	
+
 def qProfileModel(r,j,BT,R):
 	mu0=4*np.pi*1e-7
 	q=np.zeros(len(r))
@@ -557,7 +520,6 @@ l=q_limiter/q_offset-1
 j=calcCurrentProfileFromIP(r,r_limiter=r_limiter,iP=iP,
 						   radialFunction=wessonCurrentModel, 
 						   params=[1,r_limiter,l],j0Guess=2783578.873)
-#djdr=firstOrderCenterDiff(r,j)
 djdrho=fdt.firstOrderSingleCenterDiff(rho,j)
 
 # create q profile
@@ -582,10 +544,7 @@ rho_limiter=r_limiter/r0
 rho_limiter_index=findNearest(rho,rho_limiter)
 
 # calculate mu, its radial derivative, and its value at the mode surface
-#mu=1/q
-#dmudr=firstOrderCenterDiff(r,1./q)
 dmudrho=fdt.firstOrderSingleCenterDiff(rho,1./q)
-#dmudr_surf=dmudr[rho_surf_index]
 dmudrho_surf=dmudrho[rho_surf_index]
 
 # psi1
@@ -622,7 +581,6 @@ timerRef=time.time()
 domainChange=np.zeros(len(t),dtype=bool)
 
 # main loop
-#iStop=len(t)
 for i in range(0,len(t)):#len(t)):
 #	print i
 	
