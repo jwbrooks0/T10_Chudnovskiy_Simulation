@@ -10,6 +10,7 @@ import scipy.sparse as sparse
 import time as time
 import scipy.sparse.linalg as linalg
 import matplotlib.animation as animation
+from finiteDifferencing import toolbox as fdt
 #from matplotlib.animation import FuncAnimation as _FuncAnimation
 
 #import hbtepLib as hbt; reload(hbt)
@@ -89,7 +90,7 @@ def calcCurrentProfileFromIP(r,r_limiter,radialFunction,params,iP,j0GuessLeft=1e
 	
 #	j0Guess=np.mean([j0GuessLeft,j0GuessRight])
 	j=radialFunction(r,[j0Guess,params[1],params[2]])
-	ITotal=firstOrderIntegration(r,j*r)*2*np.pi
+	ITotal=fdt.firstOrderIntegration(r,j*r)*2*np.pi
 	error=(ITotal-iP)/iP
 	
 	count=0
@@ -107,7 +108,7 @@ def calcCurrentProfileFromIP(r,r_limiter,radialFunction,params,iP,j0GuessLeft=1e
 		
 		j=radialFunction(r,[j0Guess,params[1],params[2]])
 		
-		ITotal=firstOrderIntegration(r,j*r)*2*np.pi
+		ITotal=fdt.firstOrderIntegration(r,j*r)*2*np.pi
 		error=(ITotal-iP)/iP
 		if verbose==True:
 			print('count: %d, \t error: %.6f \t guess: %.3f, \t I: %.1f' % (count,error,j0Guess,ITotal))
@@ -170,20 +171,6 @@ def calcBeta(rho,Gamma,rho_limiter,rho_limiter_index,midRange,chiC,chiS):
 	return (betaC,betaS)
 
 	
-#def calcAlpha(r,djdr,q):
-#	
-#	return m**2/r+mu0*R/float(BT)*djdr/(1/q-float(n)/m)
-
-#def calcGamma1(r):
-#	dr=r[1]-r[0]
-#	return (1/(2*dr)+r/dr**2)
-#def calcGamma0(r,djdr,q):
-#	alpha=calcAlpha(r,djdr,q)
-#	dr=r[1]-r[0]
-#	return -2*r/dr**2-alpha
-#def calcGammaM1(r):
-#	dr=r[1]-r[0]
-#	return (-1/(2*dr)+r/dr**2)
 	
 def createA(r,gamma1,gamma0,gammaM1):
 	# calculate A matrix
@@ -204,20 +191,20 @@ def createA(r,gamma1,gamma0,gammaM1):
 	
 ## finite differencing codes
 	
-def firstOrderIntegration(x,y):
-	dx=x[1]-x[0]
-	return np.sum(dx*y)
+#def firstOrderIntegration(x,y):
+#	dx=x[1]-x[0]
+#	return np.sum(dx*y)
 
-def firstOrderCenterDiff(x,y):
-	# 1st order center difference
-	dx=x[1]-x[0]
-	dydx=np.zeros(len(x))
-	dydx[0]=(y[1]-y[0])/dx
-	dydx[-1]=(y[-1]-y[-2])/dx
-	for i in range(1,len(x)-1):
-		dydx[i]=(y[i+1]-y[i-1])/(2*dx)
-		
-	return dydx
+#def firstOrderCenterDiff(x,y):
+#	# 1st order center difference
+#	dx=x[1]-x[0]
+#	dydx=np.zeros(len(x))
+#	dydx[0]=(y[1]-y[0])/dx
+#	dydx[-1]=(y[-1]-y[-2])/dx
+#	for i in range(1,len(x)-1):
+#		dydx[i]=(y[i+1]-y[i-1])/(2*dx)
+#		
+#	return dydx
 	
 def createTriDiag(diag1,diag2,diag3):
 	# tri-diagonal matrix
@@ -571,7 +558,7 @@ j=calcCurrentProfileFromIP(r,r_limiter=r_limiter,iP=iP,
 						   radialFunction=wessonCurrentModel, 
 						   params=[1,r_limiter,l],j0Guess=2783578.873)
 #djdr=firstOrderCenterDiff(r,j)
-djdrho=firstOrderCenterDiff(rho,j)
+djdrho=fdt.firstOrderSingleCenterDiff(rho,j)
 
 # create q profile
 #q=quadraticQProfile(r,q0=q_offset,r1=r_limiter,q1=q_limiter)
@@ -597,7 +584,7 @@ rho_limiter_index=findNearest(rho,rho_limiter)
 # calculate mu, its radial derivative, and its value at the mode surface
 #mu=1/q
 #dmudr=firstOrderCenterDiff(r,1./q)
-dmudrho=firstOrderCenterDiff(rho,1./q)
+dmudrho=fdt.firstOrderSingleCenterDiff(rho,1./q)
 #dmudr_surf=dmudr[rho_surf_index]
 dmudrho_surf=dmudrho[rho_surf_index]
 
