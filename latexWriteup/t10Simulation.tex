@@ -406,7 +406,7 @@ where
 and
 \begin{equation} \label{}
 \begin{split}
-j_0 \equiv \left( \frac{B_T}{\mu_0 R} \frac{\partial j}{\partial \rho}\frac{1}{\mu-n/m} \right) \\
+j_0 \equiv  \frac{B_T}{\mu_0 R} \left( \mu-n/m \right) \\
 \end{split} 
 \end{equation} 
 
@@ -415,9 +415,9 @@ Starting on the BVP, we get
 \begin{equation} \label{wessonCurrentProfile}
 \begin{split}
  \frac{\partial \Psi}{\partial r} +r   \frac{\partial^2 \Psi}{\partial r^2} - \alpha \Psi & = - \mu_0r  \frac{Jm}{2a} \delta (r-a)\\ 
- \frac{\Psi_0}{r_0} \frac{\partial \phi}{\partial \rho} + r_0 \rho \frac{\Psi_0}{r_0^2}   \frac{\partial^2 \phi}{\partial \rho^2} - \frac{1}{r_0}\left( \frac{\alpha_1^*}{\rho}+\alpha_2^*\right) \Psi_0 \phi & = - \mu_0 r_0 \rho \frac{J_1 \Gamma}{2a} \frac{\delta (\rho - 1)}{a}\\
-\frac{\partial \phi}{\partial \rho} + \rho   \frac{\partial^2 \phi}{\partial \rho^2} - \left( \frac{\alpha_1^*}{\rho}+\alpha_2^*\right) \phi & = - \frac{\mu_0 \rho \Gamma J_1 m}{2 \Psi_0} \delta (\rho - 1)\\
-\frac{\partial \phi}{\partial \rho} + \rho   \frac{\partial^2 \phi}{\partial \rho^2} - \left( \frac{\alpha_1^*}{\rho}+\alpha_2^*\right)\phi & = - \rho \Gamma \delta (\rho - 1)\\
+ \frac{\Psi_0}{r_0} \frac{\partial \phi}{\partial \rho} + r_0 \rho \frac{\Psi_0}{r_0^2}   \frac{\partial^2 \phi}{\partial \rho^2} - \frac{1}{r_0}\left( \frac{\alpha^*_1}{ \rho} +\frac{\partial j^*}{\partial \rho} \right) \Psi_0 \phi & = - \mu_0 r_0 \rho \frac{J_1 \Gamma}{2a} \frac{\delta (\rho - 1)}{a}\\
+\frac{\partial \phi}{\partial \rho} + \rho   \frac{\partial^2 \phi}{\partial \rho^2} - \left( \frac{\alpha^*_1}{ \rho} +\frac{\partial j^*}{\partial \rho} \right) \phi & = - \frac{\mu_0 \rho \Gamma J_1 m}{2 \Psi_0} \delta (\rho - 1)\\
+\frac{\partial \phi}{\partial \rho} + \rho   \frac{\partial^2 \phi}{\partial \rho^2} - \left( \frac{\alpha^*_1}{ \rho} +\frac{\partial j^*}{\partial \rho} \right)\phi & = - \rho \Gamma \delta (\rho - 1)\\
 \end{split} 
 \end{equation} 
 where
