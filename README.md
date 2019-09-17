@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The [attached code](https://github.com/jwbrooks0/T10_Chudnovskiy_Simulation/blob/master/t10Model_nondim.py) and [Latex writeup](https://github.com/jwbrooks0/T10_Chudnovskiy_Simulation/blob/master/latexWriteup/main.pdf) contain my reproduction of [Chudnovskiy's 2003 tearing mode simulation on the T-10 tokamak](http://iopscience.iop.org/article/10.1088/0029-5515/43/8/307/meta) and also makes use of a [followup T-10 arictle by Ivanov](https://aip.scitation.org/doi/10.1063/1.4897174) to fill in some of the details.   Unfortunately, the original papers on this simulation did not provide all of the details necessary to complete the simulation, and I had to make interpretive guesses to fill in the blanks.  
+The [attached code](https://github.com/jwbrooks0/T10_Chudnovskiy_Simulation/blob/master/t10Model_nondim.py) and [Latex writeup](https://github.com/jwbrooks0/T10_Chudnovskiy_Simulation/blob/master/latexWriteup/main.pdf) contain my reproduction of [Chudnovskiy's 2003 tearing mode simulation on the T-10 tokamak](http://iopscience.iop.org/article/10.1088/0029-5515/43/8/307/meta) and also makes use of a [followup T-10 arictle by Ivanov](https://aip.scitation.org/doi/10.1063/1.4897174) to fill in some of the details.  The original papers on this simulation provided only the original equations and only a few of the associated initial conditions and assumptions.  Many details, including any details on the numerical scheme, were not provided, and I made many interpretive guesses to fill in the blanks.  
 
 ## Status
 
